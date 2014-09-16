@@ -1,36 +1,32 @@
-from scipy import stats, std, mean
-from random import shuffle
+from scipy import mean, random, spatial, stats, std
 
-def MantelTest(distance_matrix_1, distance_matrix_2, simulations=1000):
-    vector_1 = VectorizeMatrix(distance_matrix_1)
-    vector_2 = VectorizeMatrix(distance_matrix_2)
-    x = stats.pearsonr(vector_1, vector_2)[0]
-    m, sd = MonteCarlo(vector_1, distance_matrix_2, simulations)
-    z = (x-m)/sd
-    return x, m, sd, z
+def MantelTest(distances1, distances2, kind="matrix", simulations=1000):
+    if kind == "matrix" or kind == "m":
+        vector1 = spatial.distance.squareform(distances1, "tovector")
+        vector2 = spatial.distance.squareform(distances2, "tovector")
+        x = stats.pearsonr(vector1, vector2)[0]
+        m, s = MonteCarlo(vector1, distances2, simulations)
+    elif kind == "vector" or kind == "v":
+        matrix2 = spatial.distance.squareform(distances2, "tomatrix")
+        x = stats.pearsonr(distances1, distances2)[0]
+        m, s = MonteCarlo(distances1, matrix2, simulations)
+    z = (x-m)/s
+    return x, m, s, z
 
-def MonteCarlo(vector_1, distance_matrix_2, simulations):
+def MonteCarlo(vector1, matrix2, simulations):
     correlations = []
     for i in xrange(0, simulations):
-        distance_matrix_2_prime = ShuffleMatrix(distance_matrix_2)
-        vector_2_prime = VectorizeMatrix(distance_matrix_2_prime)
-        correlations.append(stats.pearsonr(vector_1, vector_2_prime)[0])
+        matrix2_prime = ShuffleMatrix(matrix2)
+        vector2_prime = spatial.distance.squareform(matrix2_prime, "tovector")
+        correlations.append(stats.pearsonr(vector1, vector2_prime)[0])
     return mean(correlations), std(correlations)
-
-def VectorizeMatrix(matrix):
-    vector = []
-    n = len(matrix)
-    for i in range(0, n):
-        for j in range(i+1, n):
-            vector.append(matrix[i][j])
-    return vector
 
 def ShuffleMatrix(matrix):
     n = len(matrix)
-    shuffled_matrix = [[] for i in range(0, n)]    
+    shuffled_matrix = [[] for i in xrange(0, n)]    
     new_order = range(0, n)
-    shuffle(new_order)
-    for i in range(0, n):
-        for j in range(0, n):
+    random.shuffle(new_order)
+    for i in xrange(0, n):
+        for j in xrange(0, n):
             shuffled_matrix[i].append(matrix[new_order[i]][new_order[j]])
     return shuffled_matrix
