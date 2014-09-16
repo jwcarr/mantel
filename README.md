@@ -19,21 +19,27 @@ Example 1: Correlation of two redundant distance matrices
 > dists1 = [[0,2,3],
           [2,0,1],
           [3,1,0]]
+
 > dists2 = [[0,4,3],
           [4,0,2],
           [3,2,0]]
+
 > MantelTest(dists1, dists2, "matrix", 1000)
+
 > (0.5, -0.00165, 0.70411098379442771, 0.71245870543962686)
 
 Example 2: Correlation of two condensed distance matrices
 ---------------------------------------------------------
 
 > dists1 = [2,3,1]
+
 > dists2 = [4,3,2]
+
 > MantelTest(dists1, dists2, "vector", 1000)
+
 > (0.5, -0.0073000000000000001, 0.7124933052316994, 0.71200669013307916)
 
-Example 1 and Example 2 above are identical datasets which is why they approximate the same Z-score. They are simply different representations of the distance matrices. In these cases, the Z-scores are low, so we cannot say that there's a significant correlation between the two distance matrices.
+Example 1 and Example 2 above are identical datasets which is why they both approximate the same Z-score. Each example is simply a different representation of the same distance matrix. In this case, the Z-score is low, so we cannot say that there's a significant correlation between the two distance matrices.
 
 References
 ----------
