@@ -47,12 +47,12 @@ Example 2: Correlation of two condensed distance matrices
 
 > (0.5, -0.0073000000000000001, 0.7124933052316994, 0.71200669013307916)
 
-Example 1 and Example 2 above are identical datasets which is why they both approximate the same Z-score. Each example is simply a different representation of the same distance matrices. In this case, the Z-score is low, so we cannot say that there's a significant correlation between the two matrices.
+Example 1 and Example 2 above are identical datasets which is why they both approximate the same Z-score. Each example is simply a different way of representing the same distance matrices. In this case, the Z-score is low, so we cannot say that there's a significant correlation between the two matrices.
 
 Additional notes
 ----------------
 
-This implementation uses a Monte Carlo method to sample the space of possible permutations of one of the distance matrices. This is most useful when the size of your matrix is sufficiently large that it becomes intractable to compute all possible permutations. In practice, this method is best suited to a matrices larger than 9×9. Smaller matrices could be computed deterministically.
+This implementation uses a Monte Carlo method to sample the space of possible permutations of one of the distance matrices. This is most useful when the size of your matrix is sufficiently large that it becomes intractable to compute all possible permutations. In practice, this method is best suited to matrices larger than 9×9. Smaller matrices could be computed deterministically.
 
 References
 ----------
