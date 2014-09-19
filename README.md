@@ -60,3 +60,5 @@ References
 Mantel, N. (1967). The detection of disease clustering and a generalized regression approach. Cancer Research, 27(2), 209–220.
 
 Wikipedia: https://en.wikipedia.org/wiki/Mantel_test
+
+My guide to the Mantel test for linguists: http://www.jonwcarr.net/blog/2014/9/19/a-guide-to-the-mantel-test-for-linguists
