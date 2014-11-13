@@ -1,47 +1,67 @@
-from scipy import mean, random, spatial, stats, std
+#!/usr/bin/env python
 
-#   Takes two distance matrices and performs a Mantel test. Returns a
-#   Z-score quantifying the strength of the correlation between the two
-#   distance matrices.
+from scipy import array, mean, random, spatial, stats, std, zeros
 
-def MantelTest(distances1, distances2, kind="matrix", simulations=1000):
-    if kind == "matrix" or kind == "m":
-        vector1 = spatial.distance.squareform(distances1, "tovector")
-        vector2 = spatial.distance.squareform(distances2, "tovector")
-        matrix2 = distances2
-    elif kind == "vector" or kind == "v":
-        vector1 = distances1
-        vector2 = distances2
-        matrix2 = spatial.distance.squareform(distances2, "tomatrix")
-    else:
-        print "Error: The parameter 'kind' should be set to 'matrix' or 'vector'."
-        return None
-    x = stats.pearsonr(vector1, vector2)[0]
-    m, sd = MonteCarlo(vector1, matrix2, simulations)
-    return (x-m)/sd
+# MantelTest()
+#   Takes two lists of pairwise distances and performs a Mantel test. Returns
+#   the veridical correlation (r), the mean (m) and standard deviation (sd)
+#   of the Monte Carlo sample correlations, and a Z-score (z) quantifying the
+#   significance of the veridical correlation.
 
-#   Takes a vector and matrix. Shuffles the matrix some number of times and
-#   measures the correlation with the vector for each shuffle. Returns the
-#   mean and standard deviation of the correlations.
+def MantelTest(distances1, distances2, simulations=10000):
+  if ValidateInput(distances1, distances2, simulations) == False:
+    return None
+  vector1 = array(distances1, dtype=float)
+  vector2 = array(distances2, dtype=float)
+  r = stats.pearsonr(vector1, vector2)[0]
+  m, sd = MonteCarlo(vector1, vector2, simulations)
+  z = (r-m)/sd
+  return r, m, sd, z
 
-def MonteCarlo(vector, matrix, simulations):
-    correlations = []
-    for i in xrange(0, simulations):
-        vector2 = spatial.distance.squareform(ShuffleMatrix(matrix), "tovector")
-        correlations.append(stats.pearsonr(vector, vector2)[0])
-    return mean(correlations), std(correlations)
+# MonteCarlo()
+#   Takes two vectors. Measures the correlation between vector 1 and vector 2
+#   many times, shuffling vector 2 on each iteration. Returns the mean and
+#   standard deviation of the correlations.
 
-#   Shuffles the rows and columns of a matrix, maintaining the order of
-#   elements along the columns and down the rows.
+def MonteCarlo(vector1, vector2, simulations):
+  correlations = zeros(simulations, dtype=float)
+  for i in xrange(0, simulations):
+    correlations[i] = stats.pearsonr(vector1, MatrixShuffle(vector2))[0]
+  return mean(correlations), std(correlations)
 
-def ShuffleMatrix(matrix):
-    n = len(matrix)
-    shuffled_matrix = []    
-    order = range(0, n)
-    random.shuffle(order)
-    for i in xrange(0, n):
-        row = []
-        for j in xrange(0, n):
-            row.append(matrix[order[i]][order[j]])
-        shuffled_matrix.append(row)
-    return shuffled_matrix
+# MatrixShuffle()
+#   Takes a vector, converts it to a distance matrix, shuffles the matrix, and
+#   returns the upper triangle as a vector.
+
+def MatrixShuffle(vector):
+  matrix = spatial.distance.squareform(vector, 'tomatrix')
+  n = matrix.shape[0]
+  shuffled_vector = zeros(vector.shape[0], dtype=float)
+  order = range(0, n)
+  random.shuffle(order)
+  c = 0
+  for i in xrange(0, n-1):
+    for j in xrange(i+1, n):
+      shuffled_vector[c] = matrix[order[i]][order[j]]
+      c += 1
+  return shuffled_vector
+ 
+# ValidateInput()
+#   Validates input arguments and returns an error message if a problems is
+#   identified. Returns True otherwise.
+
+def ValidateInput(distances1, distances2, simulations):
+  if type(simulations) == int:
+    if type(distances1) == list and type(distances2) == list:
+      if len(distances1) == len(distances2):
+        if spatial.distance.is_valid_y(array(distances1, dtype=float)) == True:
+          if spatial.distance.is_valid_y(array(distances2, dtype=float)) == True:
+            return True
+        print('Error: the sets of pairwise distances are invalid')
+        return False
+      print('Error: the sets of distances should be of the same length')
+      return False
+    print('Error: the sets of distances should be lists')
+    return False
+  print('Error: the number of simulations should be an integer')
+  return False
