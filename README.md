@@ -3,62 +3,54 @@ MantelTest
 
 Python code for performing a Mantel test (Mantel, 1967). The Mantel test is a statistical test of the correlation between two distance matrices.
 
+
 Usage
 -----
 
-The MantelTest() function takes two distance matrices and returns: the veridical correlation (x), the mean and standard deviation of the Monte Carlo sample (m and s), and the Z-score (z).
+The MantelTest() function takes two sets of pairwise distances and returns: the veridical correlation (r), the mean (m) and standard deviation (sd) of the Monte Carlo sample correlations, and the Z-score (z).
 
-Two additional parameters can also be specified:
+Optionally, you can specify the number of randomizations to perform. A larger number gives a more precise score but takes longer to run.
 
-- *kind* = "matrix" or "vector". Here you specify which format you're supplying: a full redundant distance matrix with 0s on the diagonal, or a condensed distance matrix (i.e. a vector representation of the upper triangle).
+A Z-score greater that 1.96 (or less than -1.96) indicates a significant correlation at α = 0.05.
 
-- *simulations* = an integer that determines the number of Monte Carlo permutations that will be run. A larger number gives a more precise score. In practice, 1000 should be sufficient.
 
-In general, a Z-score greater that 1.96 indicates a significant correlation between the two distance matrices.
-
-Requirements
+Dependencies
 ------------
 
-SciPy: http://scipy.org
+This module requires SciPy: http://scipy.org
 
-Example 1: Correlation of two redundant distance matrices
----------------------------------------------------------
 
-> dists1 = [[0,2,3],
-            [2,0,1],
-            [3,1,0]]
+Example
+-------
 
-> dists2 = [[0,4,3],
-            [4,0,2],
-            [3,2,0]]
+Let's say we have two sets of four items that we want to correlate. For four items, there are six pariwise distances. For example:
 
-> MantelTest(dists1, dists2, "matrix", 1000)
+> dists1 = [0.2, 0.4, 0.3, 0.6, 0.9, 0.4]
 
-> (0.5, -0.00165, 0.70411098379442771, 0.71245870543962686)
+> dists2 = [0.5, 0.3, 0.3, 0.7, 0.3, 0.6]
 
-Example 2: Correlation of two condensed distance matrices
----------------------------------------------------------
+We then plug these two sets of pairwise distances into the MantelTest and optionally specify the number of randomizations:
 
-> dists1 = [2,3,1]
+> MantelTest(dists1, dists2, 10000)
 
-> dists2 = [4,3,2]
+This returns the following 4-tuple:
 
-> MantelTest(dists1, dists2, "vector", 1000)
+> (-0.090752970081348555, 0.00012251650960981139, 0.44441974239796322, -0.20448120981444243)
 
-> (0.5, -0.0073000000000000001, 0.7124933052316994, 0.71200669013307916)
+In this case, the final number (the Z-score) is not greater than 1.96 or less than -1.96, so we cannot say that there is a significant correlation between the two sets.
 
-Example 1 and Example 2 above are identical datasets which is why they both approximate the same Z-score. Each example is simply a different way of representing the same distance matrices. In this case, the Z-score is low, so we cannot say that there's a significant correlation between the two matrices.
 
 Additional notes
 ----------------
 
-This implementation uses a Monte Carlo method to sample the space of possible permutations of one of the distance matrices. This is most useful when the size of your matrix is sufficiently large that it becomes intractable to compute all possible permutations. In practice, this method is best suited to matrices larger than 9×9. Smaller matrices could be computed deterministically.
+The Mantel test uses a Monte Carlo method to sample the space of possible permutations of one of the distance matrices. This is most useful when the size of your matrix is sufficiently large that it becomes intractable to compute all possible permutations. In practice, this method is best suited to matrices larger than 9×9. Smaller matrices could be computed deterministically.
 
-References
-----------
+
+References and links
+--------------------
 
 Mantel, N. (1967). The detection of disease clustering and a generalized regression approach. Cancer Research, 27(2), 209–220.
 
 Wikipedia: https://en.wikipedia.org/wiki/Mantel_test
 
-My guide to the Mantel test for linguists: http://www.jonwcarr.net/blog/2014/9/19/a-guide-to-the-mantel-test-for-linguists
+A guide to the Mantel test for linguists: http://www.jonwcarr.net/blog/2014/9/19/a-guide-to-the-mantel-test-for-linguists
