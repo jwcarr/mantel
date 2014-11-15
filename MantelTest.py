@@ -2,6 +2,8 @@
 
 from scipy import arange, array, mean, random, spatial, stats, std, zeros
 
+
+
 # MantelTest()
 #   Takes two lists of pairwise distances and performs a Mantel test. Returns
 #   the veridical correlation (r), the mean (m) and standard deviation (sd)
@@ -19,6 +21,8 @@ def MantelTest(distances1, distances2, randomizations=10000):
   z = (r-m)/sd
   return r, m, sd, z, norm
 
+
+
 # MonteCarlo()
 #   Takes two vectors. Measures the correlation between vector 1 and vector 2
 #   many times, shuffling vector 2 on each iteration. Returns the mean and
@@ -30,6 +34,8 @@ def MonteCarlo(vector1, vector2, randomizations):
   for i in xrange(0, randomizations):
     correlations[i] = stats.pearsonr(vector1, MatrixShuffle(vector2))[0]
   return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
+
+
 
 # MatrixShuffle()
 #   Takes a vector, converts it to a distance matrix, shuffles the matrix, and
@@ -47,6 +53,8 @@ def MatrixShuffle(vector):
       shuffled_vector[c] = matrix[order[i], order[j]]
       c += 1
   return shuffled_vector
+
+
 
 # ValidateInput()
 #   Validates input arguments and returns an error message if a problem is
