@@ -44,7 +44,7 @@ def MatrixShuffle(vector):
   c = 0
   for i in xrange(0, n-1):
     for j in xrange(i+1, n):
-      shuffled_vector[c] = matrix[order[i]][order[j]]
+      shuffled_vector[c] = matrix[order[i], order[j]]
       c += 1
   return shuffled_vector
 
