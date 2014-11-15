@@ -5,8 +5,9 @@ from scipy import array, mean, random, spatial, stats, std, zeros
 # MantelTest()
 #   Takes two lists of pairwise distances and performs a Mantel test. Returns
 #   the veridical correlation (r), the mean (m) and standard deviation (sd)
-#   of the Monte Carlo sample correlations, and a Z-score (z) quantifying the
-#   significance of the veridical correlation.
+#   of the Monte Carlo sample correlations, a Z-score (z) quantifying the
+#   significance of the veridical correlation, and a p-value for a normality
+#   test on the distribution of sample correlations (norm).
 
 def MantelTest(distances1, distances2, randomizations=10000):
   if ValidateInput(distances1, distances2, randomizations) == False:
@@ -14,20 +15,21 @@ def MantelTest(distances1, distances2, randomizations=10000):
   vector1 = array(distances1, dtype=float)
   vector2 = array(distances2, dtype=float)
   r = stats.pearsonr(vector1, vector2)[0]
-  m, sd = MonteCarlo(vector1, vector2, randomizations)
+  m, sd, norm = MonteCarlo(vector1, vector2, randomizations)
   z = (r-m)/sd
-  return r, m, sd, z
+  return r, m, sd, z, norm
 
 # MonteCarlo()
 #   Takes two vectors. Measures the correlation between vector 1 and vector 2
 #   many times, shuffling vector 2 on each iteration. Returns the mean and
-#   standard deviation of the correlations.
+#   standard deviation of the correlations, and a p-value for a normality test
+#   of the distribution of correlations.
 
 def MonteCarlo(vector1, vector2, randomizations):
   correlations = zeros(randomizations, dtype=float)
   for i in xrange(0, randomizations):
     correlations[i] = stats.pearsonr(vector1, MatrixShuffle(vector2))[0]
-  return mean(correlations), std(correlations)
+  return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
 
 # MatrixShuffle()
 #   Takes a vector, converts it to a distance matrix, shuffles the matrix, and
