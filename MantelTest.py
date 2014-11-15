@@ -45,12 +45,12 @@ def MatrixShuffle(vector):
   matrix = spatial.distance.squareform(vector, 'tomatrix')
   shuffled_vector = zeros(vector.shape[0], dtype=float)
   n = matrix.shape[0]
-  order = arange(n, dtype=int)
-  random.shuffle(order)
+  shuffle_order = arange(n, dtype=int)
+  random.shuffle(shuffle_order)
   c = 0
   for i in xrange(0, n-1):
     for j in xrange(i+1, n):
-      shuffled_vector[c] = matrix[order[i], order[j]]
+      shuffled_vector[c] = matrix[shuffle_order[i], shuffle_order[j]]
       c += 1
   return shuffled_vector
 
