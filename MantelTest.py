@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from scipy import array, mean, random, spatial, stats, std, zeros
+from scipy import arange, array, mean, random, spatial, stats, std, zeros
 
 # MantelTest()
 #   Takes two lists of pairwise distances and performs a Mantel test. Returns
@@ -39,7 +39,7 @@ def MatrixShuffle(vector):
   matrix = spatial.distance.squareform(vector, 'tomatrix')
   shuffled_vector = zeros(vector.shape[0], dtype=float)
   n = matrix.shape[0]
-  order = range(0, n)
+  order = arange(n, dtype=int)
   random.shuffle(order)
   c = 0
   for i in xrange(0, n-1):
