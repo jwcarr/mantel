@@ -49,7 +49,7 @@ def MatrixShuffle(vector):
   return shuffled_vector
 
 # ValidateInput()
-#   Validates input arguments and returns an error message if a problems is
+#   Validates input arguments and returns an error message if a problem is
 #   identified. Returns True otherwise.
 
 def ValidateInput(distances1, distances2, randomizations):
