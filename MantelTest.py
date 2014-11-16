@@ -15,7 +15,7 @@ def MantelTest(distances1, distances2, randomizations=10000):
   ValidateInput(distances1, distances2, randomizations)
   vector1 = array(distances1, dtype=float)
   vector2 = array(distances2, dtype=float)
-  r = corrcoef([vector1, vector2])[0, 1]
+  r = corrcoef(vector1, vector2)[0, 1]
   m, sd, norm = MonteCarlo(vector1, vector2, randomizations)
   z = (r-m)/sd
   return r, m, sd, z, norm
@@ -31,7 +31,7 @@ def MantelTest(distances1, distances2, randomizations=10000):
 def MonteCarlo(vector1, vector2, randomizations):
   correlations = zeros(randomizations, dtype=float)
   for i in xrange(0, randomizations):
-    correlations[i] = corrcoef([vector1, MatrixShuffle(vector2)])[0, 1]
+    correlations[i] = corrcoef(vector1, MatrixShuffle(vector2))[0, 1]
   return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
 
 
