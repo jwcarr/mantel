@@ -12,8 +12,7 @@ from scipy import arange, array, corrcoef, mean, random, spatial, stats, std, ze
 #   test on the distribution of sample correlations (norm).
 
 def MantelTest(distances1, distances2, randomizations=10000):
-  if ValidateInput(distances1, distances2, randomizations) == False:
-    return None
+  ValidateInput(distances1, distances2, randomizations)
   vector1 = array(distances1, dtype=float)
   vector2 = array(distances2, dtype=float)
   r = corrcoef([vector1, vector2])[0, 1]
@@ -57,21 +56,16 @@ def MatrixShuffle(vector):
 
 
 # ValidateInput()
-#   Validates input arguments and returns an error message if a problem is
-#   identified. Returns True otherwise.
+#   Validates input arguments and raises an error if a problem is identified.
 
 def ValidateInput(distances1, distances2, randomizations):
-  if type(randomizations) == int:
-    if type(distances1) == list and type(distances2) == list:
-      if len(distances1) == len(distances2):
-        if spatial.distance.is_valid_y(array(distances1, dtype=float)) == True:
-          if spatial.distance.is_valid_y(array(distances2, dtype=float)) == True:
-            return True
-        print('Error: the sets of pairwise distances are invalid')
-        return False
-      print('Error: the sets of distances should be of the same length')
-      return False
-    print('Error: the sets of distances should be lists')
-    return False
-  print('Error: the number of randomizations should be an integer')
-  return False
+  if type(randomizations) != int:
+    raise ValueError('The number of randomizations should be an integer')
+  if type(distances1) != list or type(distances2) != list:
+    raise ValueError('The sets of distances should be Python lists')
+  if len(distances1) != len(distances2):
+    raise ValueError('The sets of distances should be of the same length')
+  if spatial.distance.is_valid_y(array(distances1, dtype=float)) == False:
+    raise ValueError('The first set of pairwise distances is invalid')
+  if spatial.distance.is_valid_y(array(distances2, dtype=float)) == False:
+    raise ValueError('The second set of pairwise distances is invalid')
