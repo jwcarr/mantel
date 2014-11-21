@@ -62,9 +62,9 @@ def ValidateInput(distances1, distances2, randomizations):
   if type(randomizations) != int:
     raise ValueError('The number of randomizations should be an integer')
   if type(distances1) != list or type(distances2) != list:
-    raise ValueError('The sets of distances should be Python lists')
+    raise ValueError('The sets of pairise distances should be Python lists')
   if len(distances1) != len(distances2):
-    raise ValueError('The sets of distances should be of the same length')
+    raise ValueError('The two sets of pairwise distances should be of the same length')
   if spatial.distance.is_valid_y(array(distances1, dtype=float)) == False:
     raise ValueError('The first set of pairwise distances is invalid')
   if spatial.distance.is_valid_y(array(distances2, dtype=float)) == False:
