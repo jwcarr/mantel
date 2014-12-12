@@ -7,9 +7,9 @@ Python code for performing a Mantel test (Mantel, 1967). The Mantel test is a st
 Usage
 -----
 
-The MantelTest() function takes two lists of pairwise distances and returns: the veridical correlation, the mean and standard deviation of the Monte Carlo sample correlations, a Z-score quantifying the significance of the veridical correlation, and a p-value for a normality test of the distribution of the correlations.
+The MantelTest() function takes two lists of pairwise distances and returns: the veridical correlation and p-value, the mean and standard deviation of the Monte Carlo sample correlations, a Z-score quantifying the significance of the veridical correlation, and a p-value for a normality test of the distribution of the correlations.
 
-Optionally, you can specify the number of randomizations to perform. A larger number gives a more precise score but takes longer to run.
+Optionally, you can specify the number of randomizations to perform (a larger number gives a more precise score but takes longer to run) and which type of correlation coefficient to use (Pearson's r, Spearman's r, or Kendall's tau).
 
 A Z-score greater that 1.96 (or less than -1.96) indicates a significant correlation at α = 0.05.
 
@@ -31,17 +31,17 @@ For four items, there are six pariwise distances. First we derive the pairwise d
 
 > dists2 = [0.5, 0.3, 0.3, 0.7, 0.3, 0.6]
 
-We plug these two lists of pairwise distances into the MantelTest and optionally specify the number of randomizations:
+We plug these two lists of pairwise distances into the MantelTest and optionally specify the number of randomizations and correlation method:
 
-> MantelTest(dists1, dists2, 10000)
+> MantelTest(dists1, dists2, 10000, 'pearson')
 
-We measure the veridical correlation between the two lists of pairwise distances. Then we proceed to repeatedly measure the correlation again and again under random permutations of one of the distance matrices. Finally, we compare our veridical correlation with the mean and standard deviation of the Monte Carlo sample correlations.
+This will measure the veridical correlation between the two lists of pairwise distances. Then we proceed to repeatedly measure the correlation again and again under random permutations of one of the distance matrices. Finally, we compare our veridical correlation with the mean and standard deviation of the Monte Carlo sample correlations to generate a Z-score.
 
-In this example, the program would return the following 5-tuple:
+In this example, the program would return the following 6-tuple:
 
-> (-0.090752..., 0.000122..., 0.444419..., -0.204481..., 0.0)
+> (-0.090752..., 0.864244..., 0.000122..., 0.444419..., -0.204481..., 0.0)
 
-Since the fourth number (the Z-score) is not greater than 1.96 (nor less than -1.96), we cannot say that there is a significant correlation between the two sets of distances.
+Since the fifth number (the Z-score) is not greater than 1.96 (nor less than -1.96), we cannot say that there is a significant correlation between the two sets of distances.
 
 
 Additional notes
