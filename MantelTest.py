@@ -22,6 +22,21 @@ def MantelTest(distances1, distances2, randomizations=10000):
 
 
 
+# Correlate()
+#   Correlates two vectors using a given type of correlation coefficient
+
+def Correlate(vector1, vector2, correlation_measure):
+  if correlation_measure == 'pearson':
+    return stats.pearsonr(vector1, vector2)
+  elif correlation_measure == 'spearman':
+    return stats.spearmanr(vector1, vector2)
+  elif correlation_measure == 'kendall':
+    return stats.kendalltau(vector1, vector2)
+  else:
+    raise ValueError('The correlation_measure should be set to "pearson", "spearman", or "kendall"')
+
+
+
 # MonteCarlo()
 #   Takes two vectors. Measures the correlation between vector 1 and vector 2
 #   many times, shuffling vector 2 on each iteration. Returns the mean and
