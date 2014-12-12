@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from scipy import arange, array, corrcoef, mean, random, spatial, stats, std, zeros
+from scipy import arange, array, mean, random, spatial, stats, std, zeros
 
 
 
@@ -11,14 +11,14 @@ from scipy import arange, array, corrcoef, mean, random, spatial, stats, std, ze
 #   significance of the veridical correlation, and a p-value for a normality
 #   test on the distribution of sample correlations (norm).
 
-def MantelTest(distances1, distances2, randomizations=10000):
-  ValidateInput(distances1, distances2, randomizations)
+def MantelTest(distances1, distances2, randomizations=10000, correlation_measure='pearson'):
+  ValidateInput(distances1, distances2, randomizations, correlation_measure)
   vector1 = array(distances1, dtype=float)
   vector2 = array(distances2, dtype=float)
-  r = corrcoef(vector1, vector2)[0, 1]
-  m, sd, norm = MonteCarlo(vector1, vector2, randomizations)
+  r, p = Correlate(vector1, vector2, correlation_measure)
+  m, sd, norm = MonteCarlo(vector1, vector2, randomizations, correlation_measure)
   z = (r-m)/sd
-  return r, m, sd, z, norm
+  return r, p, m, sd, z, norm
 
 
 
@@ -43,10 +43,10 @@ def Correlate(vector1, vector2, correlation_measure):
 #   standard deviation of the correlations, and a p-value for a normality test
 #   of the distribution of correlations.
 
-def MonteCarlo(vector1, vector2, randomizations):
+def MonteCarlo(vector1, vector2, randomizations, correlation_measure):
   correlations = zeros(randomizations, dtype=float)
   for i in xrange(0, randomizations):
-    correlations[i] = corrcoef(vector1, MatrixShuffle(vector2))[0, 1]
+    correlations[i] = Correlate(vector1, MatrixShuffle(vector2), correlation_measure)[0]
   return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
 
 
@@ -73,9 +73,11 @@ def MatrixShuffle(vector):
 # ValidateInput()
 #   Validates input arguments and raises an error if a problem is identified.
 
-def ValidateInput(distances1, distances2, randomizations):
+def ValidateInput(distances1, distances2, randomizations, correlation_measure):
   if type(randomizations) != int:
     raise ValueError('The number of randomizations should be an integer')
+  if type(correlation_measure) != str or correlation_measure not in ['pearson', 'spearman', 'kendall']:
+    raise ValueError('The correlation_measure should be set to "pearson", "spearman", or "kendall"')
   if type(distances1) != list or type(distances2) != list:
     raise ValueError('The sets of pairise distances should be Python lists')
   if len(distances1) != len(distances2):
