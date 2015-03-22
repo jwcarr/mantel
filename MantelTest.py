@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from scipy import arange, array, mean, random, spatial, stats, std, zeros
+from scipy import array, mean, random, spatial, stats, std, zeros
 
 
 
@@ -53,20 +53,12 @@ def MonteCarlo(vector1, vector2, randomizations, correlation_measure):
 
 # MatrixShuffle()
 #   Takes a vector, converts it to a distance matrix, shuffles the matrix, and
-#   returns the upper triangle as a vector.
+#   converts the shuffled matrix back to a vector.
 
 def MatrixShuffle(vector):
   matrix = spatial.distance.squareform(vector, 'tomatrix')
-  shuffled_vector = zeros(vector.shape[0], dtype=float)
-  n = matrix.shape[0]
-  shuffle_order = arange(n, dtype=int)
-  random.shuffle(shuffle_order)
-  c = 0
-  for i in xrange(0, n-1):
-    for j in xrange(i+1, n):
-      shuffled_vector[c] = matrix[shuffle_order[i], shuffle_order[j]]
-      c += 1
-  return shuffled_vector
+  permutation = random.permutation(matrix.shape[0])
+  return spatial.distance.squareform(matrix[permutation, :][:, permutation], 'tovector')
 
 
 
