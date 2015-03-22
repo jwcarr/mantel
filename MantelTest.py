@@ -45,18 +45,18 @@ def Correlate(vector1, vector2, correlation_measure):
 
 def MonteCarlo(vector1, vector2, randomizations, correlation_measure):
   correlations = zeros(randomizations, dtype=float)
+  vector2_as_matrix = spatial.distance.squareform(vector2, 'tomatrix')
   for i in xrange(0, randomizations):
-    correlations[i] = Correlate(vector1, MatrixShuffle(vector2), correlation_measure)[0]
+    correlations[i] = Correlate(vector1, MatrixShuffle(vector2_as_matrix), correlation_measure)[0]
   return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
 
 
 
 # MatrixShuffle()
-#   Takes a vector, converts it to a distance matrix, shuffles the matrix, and
-#   converts the shuffled matrix back to a vector.
+#   Takes a distance matrix, shuffles it (maintaining the order of rows and
+#   columns), and then converts the shuffled matrix to a vector.
 
-def MatrixShuffle(vector):
-  matrix = spatial.distance.squareform(vector, 'tomatrix')
+def MatrixShuffle(matrix):
   permutation = random.permutation(matrix.shape[0])
   return spatial.distance.squareform(matrix[permutation, :][:, permutation], 'tovector')
 
