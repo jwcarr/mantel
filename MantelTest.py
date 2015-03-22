@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from scipy import array, mean, random, spatial, stats, std, zeros
+from scipy import array, random, spatial, stats, zeros
 
 
 
@@ -48,7 +48,7 @@ def MonteCarlo(vector1, vector2, randomizations, correlation_measure):
   vector2_as_matrix = spatial.distance.squareform(vector2, 'tomatrix')
   for i in xrange(0, randomizations):
     correlations[i] = Correlate(vector1, MatrixShuffle(vector2_as_matrix), correlation_measure)[0]
-  return mean(correlations), std(correlations), stats.normaltest(correlations)[1]
+  return correlations.mean(), correlations.std(), stats.normaltest(correlations)[1]
 
 
 
