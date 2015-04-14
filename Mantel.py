@@ -4,14 +4,14 @@ from scipy import array, random, spatial, stats, zeros
 
 
 
-# MantelTest()
+# Test()
 #   Takes two lists of pairwise distances and performs a Mantel test. Returns
 #   the veridical correlation (r), the mean (m) and standard deviation (sd)
 #   of the Monte Carlo sample correlations, a Z-score (z) quantifying the
 #   significance of the veridical correlation, and a p-value for a normality
 #   test on the distribution of sample correlations (norm).
 
-def MantelTest(distances1, distances2, randomizations=10000, correlation_method='pearson'):
+def Test(distances1, distances2, randomizations=10000, correlation_method='pearson'):
   ValidateInput(distances1, distances2, randomizations)
   SetCorrelationMethod(correlation_method)
   vector1 = array(distances1, dtype=float)
@@ -40,7 +40,7 @@ def MonteCarlo(vector1, vector2, randomizations):
 
 # MatrixShuffle()
 #   Takes a distance matrix, shuffles it (maintaining the order of rows and
-#   columns), and then converts the shuffled matrix to a vector.
+#   columns), and then returns the shuffled matrix as a vector.
 
 def MatrixShuffle(matrix):
   permutation = random.permutation(matrix.shape[0])
