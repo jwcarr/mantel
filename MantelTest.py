@@ -12,7 +12,8 @@ from scipy import array, random, spatial, stats, zeros
 #   test on the distribution of sample correlations (norm).
 
 def MantelTest(distances1, distances2, randomizations=10000, correlation_method='pearson'):
-  ValidateInput(distances1, distances2, randomizations, correlation_method)
+  ValidateInput(distances1, distances2, randomizations)
+  SetCorrelationMethod(correlation_method)
   vector1 = array(distances1, dtype=float)
   vector2 = array(distances2, dtype=float)
   r, p = Correlate(vector1, vector2)
@@ -50,8 +51,7 @@ def MatrixShuffle(matrix):
 # ValidateInput()
 #   Validates input arguments and raises an error if a problem is identified.
 
-def ValidateInput(distances1, distances2, randomizations, correlation_method):
-  global Correlate
+def ValidateInput(distances1, distances2, randomizations):
   if type(randomizations) != int:
     raise ValueError('The number of randomizations should be an integer')
   if type(distances1) != list or type(distances2) != list:
@@ -62,6 +62,14 @@ def ValidateInput(distances1, distances2, randomizations, correlation_method):
     raise ValueError('The first set of pairwise distances is invalid')
   if spatial.distance.is_valid_y(array(distances2, dtype=float)) == False:
     raise ValueError('The second set of pairwise distances is invalid')
+
+
+
+# SetCorrelationMethod()
+#   Assigns the relevant correlation function to the global variable 'Correlate'.
+
+def SetCorrelationMethod(correlation_method):
+  global Correlate
   if correlation_method == 'pearson':
     Correlate = stats.pearsonr
   elif correlation_method == 'spearman':
