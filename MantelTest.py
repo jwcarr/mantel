@@ -18,7 +18,7 @@ def MantelTest(distances1, distances2, randomizations=10000, correlation_method=
   r, p = Correlate(vector1, vector2)
   m, sd, norm = MonteCarlo(vector1, vector2, randomizations)
   z = (r-m)/sd
-  return r, p, m, sd, z, norm
+  return z, r, p, m, sd, norm
 
 
 
