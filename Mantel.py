@@ -1,80 +1,75 @@
 #!/usr/bin/env python
 
-from scipy import array, random, spatial, stats, zeros
+from scipy import asarray, corrcoef, random, spatial, zeros
 
+def Test(X, Y, perms=100000):
+  """
+  Takes two distance matrices (either redundant matrices or condensed
+  vectors) and performs a Mantel test.
 
+  Parameters
+  ----------
+  X : array_like
+      First distance matrix (condensed or redundant)
+  Y : array_like
+      Second distance matrix (condensed or redundant), where the order
+      of elements corresponds to the order of elements in the first matrix
+  perms : int, optional
+      The number of permutations to perform
 
-# Test()
-#   Takes two lists of pairwise distances and performs a Mantel test. Returns
-#   the veridical correlation (r), the mean (m) and standard deviation (sd)
-#   of the Monte Carlo sample correlations, a Z-score (z) quantifying the
-#   significance of the veridical correlation, and a p-value for a normality
-#   test on the distribution of sample correlations (norm).
+  Returns
+  -------
+  z : float
+      A standard score (z-score)
+  """
 
-def Test(distances1, distances2, randomizations=10000, correlation_method='pearson'):
-  ValidateInput(distances1, distances2, randomizations)
-  SetCorrelationMethod(correlation_method)
-  vector1 = array(distances1, dtype=float)
-  vector2 = array(distances2, dtype=float)
-  r, p = Correlate(vector1, vector2)
-  m, sd, norm = MonteCarlo(vector1, vector2, randomizations)
-  z = (r-m)/sd
-  return z, r, p, m, sd, norm
+  X = asarray(X, dtype=float)
+  Y = asarray(Y, dtype=float)
 
+  if spatial.distance.is_valid_dm(X) == False and spatial.distance.is_valid_y(X) == False:
+    raise ValueError('X is not a valid distance matrix')
 
+  if spatial.distance.is_valid_dm(Y) == False and spatial.distance.is_valid_y(Y) == False:
+    raise ValueError('Y is not a valid distance matrix')
 
-# MonteCarlo()
-#   Takes two vectors. Measures the correlation between vector 1 and vector 2
-#   many times, shuffling vector 2 on each iteration. Returns the mean and
-#   standard deviation of the correlations, and a p-value for a normality test
-#   of the distribution of correlations.
+  # X is vector and Y is vector
+  if len(X.shape) == 1 and len(Y.shape) == 1:
+    Y_as_matrix = spatial.distance.squareform(Y, 'tomatrix', False)
 
-def MonteCarlo(vector1, vector2, randomizations):
-  correlations = zeros(randomizations, dtype=float)
-  vector2_as_matrix = spatial.distance.squareform(vector2, 'tomatrix')
-  for i in xrange(0, randomizations):
-    correlations[i] = Correlate(vector1, MatrixShuffle(vector2_as_matrix))[0]
-  return correlations.mean(), correlations.std(), stats.normaltest(correlations)[1]
+  # X is vector and Y is matrix
+  elif len(X.shape) == 1 and len(Y.shape) == 2:
+    Y_as_matrix = Y
+    Y = spatial.distance.squareform(Y, 'tovector', False)
 
+  # X is matrix and Y is vector
+  elif len(X.shape) == 2 and len(Y.shape) == 1:
+    Y_as_matrix = X
+    X, Y = Y, spatial.distance.squareform(X, 'tovector', False)
 
+  # X is matrix and Y is matrix
+  elif len(X.shape) == 2 and len(Y.shape) == 2:
+    Y_as_matrix = Y
+    X = spatial.distance.squareform(X, 'tovector', False)
+    Y = spatial.distance.squareform(Y, 'tovector', False)
 
-# MatrixShuffle()
-#   Takes a distance matrix, shuffles it (maintaining the order of rows and
-#   columns), and then returns the shuffled matrix as a vector.
-
-def MatrixShuffle(matrix):
-  permutation = random.permutation(matrix.shape[0])
-  return spatial.distance.squareform(matrix[permutation, :][:, permutation], 'tovector')
-
-
-
-# ValidateInput()
-#   Validates input arguments and raises an error if a problem is identified.
-
-def ValidateInput(distances1, distances2, randomizations):
-  if type(randomizations) != int:
-    raise ValueError('The number of randomizations should be an integer')
-  if type(distances1) != list or type(distances2) != list:
-    raise ValueError('The sets of pairise distances should be Python lists')
-  if len(distances1) != len(distances2):
-    raise ValueError('The two sets of pairwise distances should be of the same length')
-  if spatial.distance.is_valid_y(array(distances1, dtype=float)) == False:
-    raise ValueError('The first set of pairwise distances is invalid')
-  if spatial.distance.is_valid_y(array(distances2, dtype=float)) == False:
-    raise ValueError('The second set of pairwise distances is invalid')
-
-
-
-# SetCorrelationMethod()
-#   Assigns the relevant correlation function to the global variable 'Correlate'.
-
-def SetCorrelationMethod(correlation_method):
-  global Correlate
-  if correlation_method == 'pearson':
-    Correlate = stats.pearsonr
-  elif correlation_method == 'spearman':
-    Correlate = stats.spearmanr
-  elif correlation_method == 'kendall':
-    Correlate = stats.kendalltau
   else:
-    raise ValueError('The correlation method should be set to "pearson", "spearman", or "kendall"')
+    raise ValueError('X and Y should have 1 or 2 dimensions')
+
+  if X.shape[0] != Y.shape[0]:
+    raise ValueError('X and Y are not of equal size')
+
+  r = corrcoef(X, Y)[0, 1] # Veridical correlation
+  n = Y_as_matrix.shape[0] # Matrix size (N x N)
+  MC_corrs = zeros(perms, dtype=float) # Empty array for Monte Carlo correlations
+
+  for i in xrange(perms):
+    permutation = random.permutation(n) # Random order in which to permute the matrix
+    Y_as_matrix_permuted = Y_as_matrix[permutation, :][:, permutation] # Permute the matrix
+    Y_permuted = spatial.distance.squareform(Y_as_matrix_permuted, 'tovector', False) # Convert back to vector
+    MC_corrs[i] = corrcoef(X, Y_permuted)[0, 1] # Store the correlation between X and permuted Y
+
+  m = MC_corrs.mean() # Mean of Monte Carlo correlations
+  sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations
+  z = (r - m) / sd # Z-score
+
+  return z
