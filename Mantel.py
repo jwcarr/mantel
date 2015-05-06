@@ -24,6 +24,12 @@ def Test(X, Y, perms=100000, method='pearson'):
   -------
   z : float
       A standard score (z-score)
+  r : float
+      Veridical correlation
+  m : float
+      Mean of Monte Carlo sample correlations
+  sd : float
+      Standard deviation of Monte Carlo sample correlations
   """
 
   X = asarray(X, dtype=float)
