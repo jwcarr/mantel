@@ -87,4 +87,4 @@ def Test(X, Y, perms=100000, method='pearson'):
   sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations
   z = (r - m) / sd # Z-score
 
-  return z
+  return z, r, m, sd
