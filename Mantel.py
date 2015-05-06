@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from scipy import asarray, corrcoef, random, spatial, zeros
+from scipy import asarray, random, spatial, stats, zeros
 
-def Test(X, Y, perms=100000):
+def Test(X, Y, perms=100000, method='pearson'):
   """
   Takes two distance matrices (either redundant matrices or condensed
   vectors) and performs a Mantel test.
@@ -16,6 +16,9 @@ def Test(X, Y, perms=100000):
       of elements corresponds to the order of elements in the first matrix
   perms : int, optional
       The number of permutations to perform
+  method : str, optional
+      Type of correlation coefficient to use; either 'pearson', 'spearman',
+      or 'kendall'
 
   Returns
   -------
@@ -58,7 +61,19 @@ def Test(X, Y, perms=100000):
   if X.shape[0] != Y.shape[0]:
     raise ValueError('X and Y are not of equal size')
 
-  r = corrcoef(X, Y)[0, 1] # Veridical correlation
+  if method == 'pearson':
+    correlate = stats.pearsonr
+
+  elif method == 'spearman':
+    correlate = stats.spearmanr
+
+  elif method == 'kendall':
+    correlate = stats.kendalltau
+
+  else:
+    raise ValueError('The correlation method should be set to "pearson", "spearman", or "kendall"')
+
+  r = correlate(X, Y)[0] # Veridical correlation
   n = Y_as_matrix.shape[0] # Matrix size (N x N)
   MC_corrs = zeros(perms, dtype=float) # Empty array for Monte Carlo correlations
 
@@ -66,7 +81,7 @@ def Test(X, Y, perms=100000):
     permutation = random.permutation(n) # Random order in which to permute the matrix
     Y_as_matrix_permuted = Y_as_matrix[permutation, :][:, permutation] # Permute the matrix
     Y_permuted = spatial.distance.squareform(Y_as_matrix_permuted, 'tovector', False) # Convert back to vector
-    MC_corrs[i] = corrcoef(X, Y_permuted)[0, 1] # Store the correlation between X and permuted Y
+    MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
 
   m = MC_corrs.mean() # Mean of Monte Carlo correlations
   sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations

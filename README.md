@@ -7,9 +7,9 @@ Python code for performing a Mantel test (Mantel, 1967). The Mantel test is a si
 Description
 -----------
 
-This implementation of the Mantel test takes two lists of pairwise distances and returns: the veridical correlation and p-value, the mean and standard deviation of the Monte Carlo sample correlations, a Z-score quantifying the significance of the veridical correlation, and a p-value for a normality test of the distribution of sample correlations.
+This implementation of the Mantel test takes two distances matrices (either redundant matrices or condensed vectors) and returns a standard score (Z-score) quantifying the significance of the veridical correlation.
 
-Optionally, you can specify the number of randomizations to perform (a larger number gives a more precise z-score but takes longer to run) and which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *r*, or Kendall’s *τ*).
+Optionally, you can specify the number of randomizations to perform (a larger number gives a more precise z-score but takes longer to run).
 
 A Z-score greater that 1.96 (or less than -1.96) indicates a significant correlation at *α* = 0.05.
 
