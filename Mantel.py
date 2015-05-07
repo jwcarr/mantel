@@ -61,9 +61,6 @@ def Test(X, Y, perms=100000, method='pearson'):
     X = spatial.distance.squareform(X, 'tovector', False)
     Y = spatial.distance.squareform(Y, 'tovector', False)
 
-  else:
-    raise ValueError('X and Y should have 1 or 2 dimensions')
-
   if X.shape[0] != Y.shape[0]:
     raise ValueError('X and Y are not of equal size')
 
