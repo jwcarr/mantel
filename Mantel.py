@@ -96,11 +96,12 @@ def Test(X, Y, perms=10000, method='pearson'):
   r = correlate(X, Y)[0] # Veridical correlation
   n = Y_as_matrix.shape[0] # Matrix size (N x N)
   MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
+  Y_permuted = zeros((n * (n - 1)) // 2, dtype=float) # Empty array to store permutation of Y
 
   for i in xrange(perms):
     permutation = random.permutation(n) # Random order in which to permute the matrix
     Y_as_matrix_permuted = Y_as_matrix[permutation, :][:, permutation] # Permute the matrix
-    Y_permuted = spatial.distance.squareform(Y_as_matrix_permuted, 'tovector', False) # Convert back to vector
+    spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted) # Convert back to vector
     MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
 
   m = MC_corrs.mean() # Mean of Monte Carlo correlations
