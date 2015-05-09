@@ -96,7 +96,7 @@ def Test(X, Y, perms=10000, method='pearson'):
   r = correlate(X, Y)[0] # Veridical correlation
   n = Y_as_matrix.shape[0] # Matrix size (N x N)
   MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
-  Y_permuted = zeros((n * (n - 1)) // 2, dtype=float) # Empty array to store permutation of Y
+  Y_permuted = zeros(Y.shape[0], dtype=float) # Empty array to store permutation of Y
 
   for i in xrange(perms):
     permutation = random.permutation(n) # Random order in which to permute the matrix
