@@ -91,6 +91,9 @@ def Test(X, Y, perms=10000, method='pearson'):
     X = rankdata(X)
     Y = rankdata(Y)
 
+  elif method != 'pearson':
+    raise ValueError('The correlation method should be set to "pearson" or "spearman"')
+
   # Compute parts of the correlation coefficient that can be done outside the Monte Carlo loop.
 
   X_res = X - X.mean() # X residuals
