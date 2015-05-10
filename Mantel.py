@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from scipy import asarray, random, spatial, stats, zeros
+from numpy import asarray, random, sqrt, sum, zeros
+from scipy.spatial import distance
+from scipy.stats import rankdata
 
 def Test(X, Y, perms=10000, method='pearson'):
   """
@@ -19,10 +21,8 @@ def Test(X, Y, perms=10000, method='pearson'):
       The number of permutations to perform (default: 10000). A larger
       number gives a more reliable Z-score but takes longer to run.
   method : str, optional
-      Type of correlation coefficient to use; either 'pearson', 'spearman',
-      or 'kendall' (default: 'pearson'). N.B. the time complexity of
-      Kendall's tau scales exponentially with matrix size and is therefore
-      slow for large matrices.
+      Type of correlation coefficient to use; either 'pearson' or 
+      'spearman' (default: 'pearson').
 
   Returns
   -------
@@ -41,71 +41,64 @@ def Test(X, Y, perms=10000, method='pearson'):
   X = asarray(X, dtype=float)
   Y = asarray(Y, dtype=float)
 
-  # Check that X and Y are valid distance matrices.
+  # Check that X and Y are valid distance matrices/vectors.
 
-  if spatial.distance.is_valid_dm(X) == False and spatial.distance.is_valid_y(X) == False:
+  if distance.is_valid_dm(X) == False and distance.is_valid_y(X) == False:
     raise ValueError('X is not a valid distance matrix')
 
-  if spatial.distance.is_valid_dm(Y) == False and spatial.distance.is_valid_y(Y) == False:
+  if distance.is_valid_dm(Y) == False and distance.is_valid_y(Y) == False:
     raise ValueError('Y is not a valid distance matrix')
 
-  # Figure out whether X and Y are matrices or vectors and convert both to vectors and
-  # one to a matrix (as needed).
+  # If X or Y is a matrix, condense it to a vector.
 
-  # X is vector and Y is vector
-  if len(X.shape) == 1 and len(Y.shape) == 1:
-    Y_as_matrix = spatial.distance.squareform(Y, 'tomatrix', False)
+  if len(X.shape) == 2:
+    X = distance.squareform(X, 'tovector', False)
 
-  # X is vector and Y is matrix
-  elif len(X.shape) == 1 and len(Y.shape) == 2:
-    Y_as_matrix = Y
-    Y = spatial.distance.squareform(Y, 'tovector', False)
-
-  # X is matrix and Y is vector
-  elif len(X.shape) == 2 and len(Y.shape) == 1:
-    Y_as_matrix = X
-    X, Y = Y, spatial.distance.squareform(X, 'tovector', False)
-
-  # X is matrix and Y is matrix
-  elif len(X.shape) == 2 and len(Y.shape) == 2:
-    Y_as_matrix = Y
-    X = spatial.distance.squareform(X, 'tovector', False)
-    Y = spatial.distance.squareform(Y, 'tovector', False)
+  if len(Y.shape) == 2:
+    Y = distance.squareform(Y, 'tovector', False)
 
   # Check for size equality.
 
   if X.shape[0] != Y.shape[0]:
     raise ValueError('X and Y are not of equal size')
 
-  # Assign the relevant correlation function to the variable 'correlate'.
+  # If Spearman correlation is requested, convert X and Y to ranks.
 
-  if method == 'pearson':
-    correlate = stats.pearsonr
+  if method == 'spearman':
+    X = rankdata(X)
+    Y = rankdata(Y)
 
-  elif method == 'spearman':
-    correlate = stats.spearmanr
+  # Compute parts of the correlation coefficient that can be done outside the Monte Carlo loop.
 
-  elif method == 'kendall':
-    correlate = stats.kendalltau
+  X_res = X - X.mean() # X residuals
+  Y_res = Y - Y.mean() # Y residuals
+  X_ss = sum(X_res * X_res) # X sum-of-squares
+  Y_ss = sum(Y_res * Y_res) # Y sum-of-squares
+  denominator = sqrt(X_ss * Y_ss) # Denominator of the correlation coefficient
 
-  else:
-    raise ValueError('The correlation method should be set to "pearson", "spearman", or "kendall"')
+  # Reformat Y_res as a distance matrix and determine its size.
 
-  # Run Mantel test.
+  Y_res_as_matrix = distance.squareform(Y_res, 'tomatrix', False) # Y_res in matrix form
+  n = Y_res_as_matrix.shape[0] # Matrix size (N x N)
 
-  r = correlate(X, Y)[0] # Veridical correlation
-  n = Y_as_matrix.shape[0] # Matrix size (N x N)
+  # Initialize some empty arrays.
+
+  Y_res_permuted = zeros(Y_res.shape[0], dtype=float) # Empty array to store permutations of Y_res
   MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
-  Y_permuted = zeros(Y.shape[0], dtype=float) # Empty array to store permutation of Y
+
+  # Monte Carlo loop.
 
   for i in xrange(perms):
-    permutation = random.permutation(n) # Random order in which to permute the matrix
-    Y_as_matrix_permuted = Y_as_matrix[permutation, :][:, permutation] # Permute the matrix
-    spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted) # Convert back to vector
-    MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
+    order = random.permutation(n) # Random order in which to permute the matrix    
+    Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order] # Permute the matrix
+    distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted) # Convert back to vector
+    MC_corrs[i] = sum(X_res * Y_res_permuted) / denominator # Store the correlation between X and a permuation of Y
 
-  m = MC_corrs.mean() # Mean of Monte Carlo correlations
-  sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations
+  # Calculate and return the stats.
+
+  r = sum(X_res * Y_res) / denominator # Veridical correlation
+  m = MC_corrs.mean() # Mean of Monte Carlo sample correlations
+  sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
   z = (r - m) / sd # Z-score
 
   return z, r, m, sd
