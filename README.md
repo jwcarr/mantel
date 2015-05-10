@@ -1,7 +1,7 @@
 MantelTest
 ==========
 
-Python code for performing a Mantel test (Mantel, 1967). The Mantel test is a significance test for the correlation between two distance matrices.
+Efficient Python code for performing a Mantel test (Mantel, 1967). The Mantel test is a significance test of the correlation between two distance matrices.
 
 
 Description
@@ -12,6 +12,8 @@ This implementation of the Mantel test takes two distance matrices (either redun
 Optionally, you can specify the number of randomizations to perform (a larger number gives a more precise z-score but takes longer to run) and which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*).
 
 A Z-score greater that 1.96 (or less than -1.96) indicates a significant correlation at *α* = 0.05.
+
+There are currently two versions: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly more efficient but does not support Kendall’s *τ*.
 
 
 Requirements
@@ -31,7 +33,7 @@ import Mantel
 
 Let’s say we have a set of four items and we want to correlate (i) the distances between the four items using one measure with (ii) the corresponding distances between the four items using another measure. For example, your “items” might be species of animal, and your two measures might be genetic distance and geographical distance (the hypothesis being that species that live far away from each other will tend to be more genetically different).
 
-For four items, there are six pairwise distances. First you should compute the pairwise distances for each measure and store the distances in two lists or arrays (i.e. condensed distance vectors). Alternatively, you can compute the full redundant distance matrices. This module does not include any distance functions, since the metrics you use will be specific to your particular data.
+For four items, there are six pairwise distances. First you should compute the pairwise distances for each measure and store the distances in two lists or arrays (i.e. condensed distance vectors). Alternatively, you can compute the full redundant distance matrices; this program will accept either format. No distance functions are included in this module, since the metrics you use will be specific to your particular data.
 
 Let’s say our data looks like this:
 
