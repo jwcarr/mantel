@@ -1,4 +1,27 @@
-#!/usr/bin/env python
+# MantelTest
+# https://github.com/jwcarr/MantelTest
+#
+# Copyright © 2014–2015 Jon W. Carr
+#
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 from numpy import asarray, random, sqrt, sum, zeros
 from scipy.spatial import distance
@@ -21,7 +44,7 @@ def Test(X, Y, perms=10000, method='pearson'):
       The number of permutations to perform (default: 10000). A larger
       number gives a more reliable Z-score but takes longer to run.
   method : str, optional
-      Type of correlation coefficient to use; either 'pearson' or 
+      Type of correlation coefficient to use; either 'pearson' or
       'spearman' (default: 'pearson').
 
   Returns
@@ -89,7 +112,7 @@ def Test(X, Y, perms=10000, method='pearson'):
   # Monte Carlo loop.
 
   for i in xrange(perms):
-    order = random.permutation(n) # Random order in which to permute the matrix    
+    order = random.permutation(n) # Random order in which to permute the matrix
     Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order] # Permute the matrix
     distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted) # Convert back to vector
     MC_corrs[i] = sum(X_res * Y_res_permuted) / denominator # Store the correlation between X and a permuation of Y
