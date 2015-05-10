@@ -1,7 +1,7 @@
 # MantelTest
 # https://github.com/jwcarr/MantelTest
 #
-# Copyright © 2014–2015 Jon W. Carr
+# Copyright (c) 2014-2015 Jon W. Carr
 #
 # The MIT License (MIT)
 #
