@@ -23,7 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from numpy import asarray, random, sqrt, sum, zeros
+from numpy import asarray, random, sqrt, zeros
 from scipy.spatial import distance
 from scipy.stats import rankdata
 
@@ -98,8 +98,8 @@ def Test(X, Y, perms=10000, method='pearson'):
 
   X_res = X - X.mean() # X residuals
   Y_res = Y - Y.mean() # Y residuals
-  X_ss = sum(X_res * X_res) # X sum-of-squares
-  Y_ss = sum(Y_res * Y_res) # Y sum-of-squares
+  X_ss = (X_res * X_res).sum() # X sum-of-squares
+  Y_ss = (Y_res * Y_res).sum() # Y sum-of-squares
   denominator = sqrt(X_ss * Y_ss) # Denominator of the correlation coefficient
 
   # Reformat Y_res as a distance matrix and determine its size.
@@ -118,11 +118,11 @@ def Test(X, Y, perms=10000, method='pearson'):
     order = random.permutation(n) # Random order in which to permute the matrix
     Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order] # Permute the matrix
     distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted) # Convert back to vector
-    MC_corrs[i] = sum(X_res * Y_res_permuted) / denominator # Store the correlation between X and a permuation of Y
+    MC_corrs[i] = (X_res * Y_res_permuted).sum() / denominator # Store the correlation between X and a permuation of Y
 
   # Calculate and return the stats.
 
-  r = sum(X_res * Y_res) / denominator # Veridical correlation
+  r = (X_res * Y_res).sum() / denominator # Veridical correlation
   m = MC_corrs.mean() # Mean of Monte Carlo sample correlations
   sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
   z = (r - m) / sd # Z-score
