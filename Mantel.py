@@ -52,14 +52,12 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   Returns
   -------
-  z : float
-      A standard score (z-score)
   r : float
       Veridical correlation
-  m : float
-      Mean of Monte Carlo sample correlations
-  sd : float
-      Standard deviation of Monte Carlo sample correlations
+  p : float
+      Empirical p-value
+  z : float
+      Standard score (z-score)
   """
 
   # Ensure X and Y are arrays.
@@ -139,4 +137,4 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
   z = (r - m) / sd # Z-score
 
-  return z, r, m, sd
+  return r, p, z
