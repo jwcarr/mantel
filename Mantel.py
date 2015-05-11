@@ -29,23 +29,23 @@ from scipy.stats import rankdata
 
 def Test(X, Y, perms=10000, method='pearson'):
   """
-  Takes two distance matrices (either redundant matrices or condensed
-  vectors) and performs a Mantel test. The Mantel test is a significance
-  test of the correlation between two distance matrices.
+  Takes two distance matrices (either redundant matrices or condensed vectors)
+  and performs a Mantel test. The Mantel test is a significance test of the
+  correlation between two distance matrices.
 
   Parameters
   ----------
   X : array_like
       First distance matrix (condensed or redundant).
   Y : array_like
-      Second distance matrix (condensed or redundant), where the order
-      of elements corresponds to the order of elements in the first matrix.
+      Second distance matrix (condensed or redundant), where the order of
+      elements corresponds to the order of elements in the first matrix.
   perms : int, optional
-      The number of permutations to perform (default: 10000). A larger
-      number gives a more reliable Z-score but takes longer to run.
+      The number of permutations to perform (default: 10000). A larger number
+      gives a more reliable Z-score but takes longer to run.
   method : str, optional
-      Type of correlation coefficient to use; either 'pearson' or
-      'spearman' (default: 'pearson').
+      Type of correlation coefficient to use; either 'pearson' or 'spearman'
+      (default: 'pearson').
 
   Returns
   -------
