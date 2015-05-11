@@ -27,7 +27,7 @@ from numpy import asarray, random, sqrt, zeros
 from scipy.spatial import distance
 from scipy.stats import rankdata
 
-def Test(X, Y, perms=10000, method='pearson'):
+def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   """
   Takes two distance matrices (either redundant matrices or condensed vectors)
   and performs a Mantel test. The Mantel test is a significance test of the
@@ -46,6 +46,9 @@ def Test(X, Y, perms=10000, method='pearson'):
   method : str, optional
       Type of correlation coefficient to use; either 'pearson' or 'spearman'
       (default: 'pearson').
+  tail : str, optional
+      Which tail to test in the calculation of the empirical p-value; either
+      'upper' or 'lower' (default: 'upper').
 
   Returns
   -------

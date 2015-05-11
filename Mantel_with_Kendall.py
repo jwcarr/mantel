@@ -27,7 +27,7 @@ from numpy import asarray, random, zeros
 from scipy.spatial import distance
 from scipy.stats import pearsonr, spearmanr, kendalltau
 
-def Test(X, Y, perms=10000, method='pearson'):
+def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   """
   Takes two distance matrices (either redundant matrices or condensed vectors)
   and performs a Mantel test. The Mantel test is a significance test of the
@@ -47,6 +47,9 @@ def Test(X, Y, perms=10000, method='pearson'):
       Type of correlation coefficient to use; either 'pearson', 'spearman', or
       'kendall' (default: 'pearson'). N.B. the time complexity of Kendall's tau
       scales exponentially with matrix size, so it is slow for large matrices.
+  tail : str, optional
+      Which tail to test in the calculation of the empirical p-value; either
+      'upper' or 'lower' (default: 'upper').
 
   Returns
   -------
