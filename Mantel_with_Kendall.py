@@ -132,6 +132,14 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
 
   MC_corrs[perms-1] = r # Include the veridical among the Monte Carlo correlations
+
+  if tail == 'upper':
+    p = (MC_corrs >= r).sum() / float(perms) # Empirical p-value for upper tail
+  elif tail == 'lower':
+    p = (MC_corrs <= r).sum() / float(perms) # Empirical p-value for lower tail
+  else:
+    raise ValueError('The tail argument should be set to "upper" or "lower"')
+
   m = MC_corrs.mean() # Mean of Monte Carlo correlations
   sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations
   z = (r - m) / sd # Z-score
