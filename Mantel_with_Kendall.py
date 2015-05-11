@@ -123,12 +123,13 @@ def Test(X, Y, perms=10000, method='pearson'):
   MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
   Y_permuted = zeros(Y.shape[0], dtype=float) # Empty array to store permutation of Y
 
-  for i in xrange(perms):
+  for i in xrange(perms-1):
     order = random.permutation(n) # Random order in which to permute the matrix
     Y_as_matrix_permuted = Y_as_matrix[order, :][:, order] # Permute the matrix
     distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted) # Convert back to vector
     MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
 
+  MC_corrs[perms-1] = r # Include the veridical among the Monte Carlo correlations
   m = MC_corrs.mean() # Mean of Monte Carlo correlations
   sd = MC_corrs.std() # Standard deviation of Monte Carlo correlations
   z = (r - m) / sd # Z-score

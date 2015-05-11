@@ -114,7 +114,7 @@ def Test(X, Y, perms=10000, method='pearson'):
 
   # Monte Carlo loop.
 
-  for i in xrange(perms):
+  for i in xrange(perms-1):
     order = random.permutation(n) # Random order in which to permute the matrix
     Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order] # Permute the matrix
     distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted) # Convert back to vector
@@ -123,6 +123,7 @@ def Test(X, Y, perms=10000, method='pearson'):
   # Calculate and return the stats.
 
   r = (X_res * Y_res).sum() / denominator # Veridical correlation
+  MC_corrs[perms-1] = r # Include the veridical among the Monte Carlo correlations
   m = MC_corrs.mean() # Mean of Monte Carlo sample correlations
   sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
   z = (r - m) / sd # Z-score
