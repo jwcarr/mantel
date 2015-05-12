@@ -74,8 +74,8 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   if distance.is_valid_dm(Y) == False and distance.is_valid_y(Y) == False:
     raise ValueError('Y is not a valid distance matrix')
 
-  # Figure out whether X and Y are matrices or vectors and convert both to vectors and
-  # one to a matrix (as needed).
+  # Figure out whether X and Y are matrices or vectors and convert both to
+  # vectors and one to a matrix (as needed).
 
   # X is vector and Y is vector
   if len(X.shape) == 1 and len(Y.shape) == 1:
@@ -114,32 +114,56 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     correlate = kendalltau
 
   else:
-    raise ValueError('The correlation method should be set to "pearson", "spearman", or "kendall"')
+    raise ValueError('The method should be set to "pearson", "spearman", or "kendall"')
 
-  # Run Mantel test.
+  # Determine the size of the matrix (i.e. number of rows/columns).
+  n = Y_as_matrix.shape[0]
 
-  r = correlate(X, Y)[0] # Veridical correlation
-  n = Y_as_matrix.shape[0] # Matrix size (N x N)
-  MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
-  Y_permuted = zeros(Y.shape[0], dtype=float) # Empty array to store permutation of Y
+  # Initialize an empty array to store temporary vector permutations of Y.
+  Y_permuted = zeros(Y.shape[0], dtype=float)
+
+  # Initialize an empty array to store the Monte Carlo sample correlations.
+  MC_corrs = zeros(perms, dtype=float)
+
+  # Monte Carlo loop.
 
   for i in xrange(perms-1):
-    order = random.permutation(n) # Random order in which to permute the matrix
-    Y_as_matrix_permuted = Y_as_matrix[order, :][:, order] # Permute the matrix
-    distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted) # Convert back to vector
-    MC_corrs[i] = correlate(X, Y_permuted)[0] # Store the correlation between X and permuted Y
 
-  MC_corrs[perms-1] = r # Include the veridical among the Monte Carlo correlations
+    # Choose a random order in which to permute the rows/columns of the matrix.
+    order = random.permutation(n)
+
+    # Take a permutation of the matrix.
+    Y_as_matrix_permuted = Y_as_matrix[order, :][:, order]
+
+    # Condense the permuted version of the matrix into a vector. Rather than use
+    # distance.squareform(), we call directly into the C wrapper for speed.
+    distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted)
+
+    # Compute the correlation coefficient and store it to MC_corrs.
+    MC_corrs[i] = correlate(X, Y_permuted)[0]
+
+  # Compute the veridiical correlation coefficient.
+  r = correlate(X, Y)[0]
+
+  # Include the veridical correlation among the Monte Carlo correlations to
+  # prevent the p-value from being 0.
+  MC_corrs[perms-1] = r
+
+  # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (MC_corrs >= r).sum() / float(perms) # Empirical p-value for upper tail
-  elif tail == 'lower':
-    p = (MC_corrs <= r).sum() / float(perms) # Empirical p-value for lower tail
-  else:
-    raise ValueError('The tail argument should be set to "upper" or "lower"')
+    p = (MC_corrs >= r).sum() / float(perms)
 
-  m = MC_corrs.mean() # Mean of Monte Carlo sample correlations
-  sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
-  z = (r - m) / sd # Z-score
+  elif tail == 'lower':
+    p = (MC_corrs <= r).sum() / float(perms)
+
+  else:
+    raise ValueError('The tail should be set to "upper" or "lower"')
+
+  # Calculate the standard score.
+
+  m = MC_corrs.mean()
+  sd = MC_corrs.std()
+  z = (r - m) / sd
 
   return r, p, z

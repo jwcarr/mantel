@@ -93,9 +93,10 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     Y = rankdata(Y)
 
   elif method != 'pearson':
-    raise ValueError('The correlation method should be set to "pearson" or "spearman"')
+    raise ValueError('The method should be set to "pearson" or "spearman"')
 
-  # Compute parts of the correlation coefficient that can be done outside the Monte Carlo loop.
+  # Most parts of the correlation coefficient will be the same for every
+  # permutation and are therefore computed outside the Monte Carlo loop.
 
   X_res = X - X.mean() # X residuals
   Y_res = Y - Y.mean() # Y residuals
@@ -103,38 +104,59 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   Y_ss = (Y_res * Y_res).sum() # Y sum-of-squares
   denominator = sqrt(X_ss * Y_ss) # Denominator of the correlation coefficient
 
-  # Reformat Y_res as a distance matrix and determine its size.
+  # Although Y_res will be the same set of numbers on every permutation, the
+  # order will be different each time. Therefore, we reformat Y_res as a matrix
+  # so that we can take matrix permutations of the Y residuals.
+  Y_res_as_matrix = distance.squareform(Y_res, 'tomatrix', False)
 
-  Y_res_as_matrix = distance.squareform(Y_res, 'tomatrix', False) # Y_res in matrix form
-  n = Y_res_as_matrix.shape[0] # Matrix size (N x N)
+  # Determine the size of the matrix (i.e. number of rows/columns).
+  n = Y_res_as_matrix.shape[0]
 
-  # Initialize some empty arrays.
+  # Initialize an empty array to store temporary vector permutations of Y_res.
+  Y_res_permuted = zeros(Y_res.shape[0], dtype=float)
 
-  Y_res_permuted = zeros(Y_res.shape[0], dtype=float) # Empty array to store permutations of Y_res
-  MC_corrs = zeros(perms, dtype=float) # Empty array to store Monte Carlo sample correlations
+  # Initialize an empty array to store the Monte Carlo sample correlations.
+  MC_corrs = zeros(perms, dtype=float)
 
   # Monte Carlo loop.
 
   for i in xrange(perms-1):
-    order = random.permutation(n) # Random order in which to permute the matrix
-    Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order] # Permute the matrix
-    distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted) # Convert back to vector
-    MC_corrs[i] = (X_res * Y_res_permuted).sum() / denominator # Store the correlation between X and a permuation of Y
 
-  # Calculate and return the stats.
+    # Choose a random order in which to permute the rows/columns of the matrix.
+    order = random.permutation(n)
 
-  r = (X_res * Y_res).sum() / denominator # Veridical correlation
-  MC_corrs[perms-1] = r # Include the veridical among the Monte Carlo correlations
+    # Take a permutation of the matrix.
+    Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
+
+    # Condense the permuted version of the matrix into a vector. Rather than use
+    # distance.squareform(), we call directly into the C wrapper for speed.
+    distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+
+    # Compute the correlation coefficient and store it to MC_corrs.
+    MC_corrs[i] = (X_res * Y_res_permuted).sum() / denominator
+
+  # Compute the veridiical correlation coefficient.
+  r = (X_res * Y_res).sum() / denominator
+
+  # Include the veridical correlation among the Monte Carlo correlations to
+  # prevent the p-value from being 0.
+  MC_corrs[perms-1] = r
+
+  # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (MC_corrs >= r).sum() / float(perms) # Empirical p-value for upper tail
-  elif tail == 'lower':
-    p = (MC_corrs <= r).sum() / float(perms) # Empirical p-value for lower tail
-  else:
-    raise ValueError('The tail argument should be set to "upper" or "lower"')
+    p = (MC_corrs >= r).sum() / float(perms)
 
-  m = MC_corrs.mean() # Mean of Monte Carlo sample correlations
-  sd = MC_corrs.std() # Standard deviation of Monte Carlo sample correlations
-  z = (r - m) / sd # Z-score
+  elif tail == 'lower':
+    p = (MC_corrs <= r).sum() / float(perms)
+
+  else:
+    raise ValueError('The tail should be set to "upper" or "lower"')
+
+  # Calculate the standard score.
+
+  m = MC_corrs.mean()
+  sd = MC_corrs.std()
+  z = (r - m) / sd
 
   return r, p, z
