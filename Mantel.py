@@ -120,7 +120,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   # Monte Carlo loop.
 
-  for i in xrange(perms-1):
+  for i in range(perms-1):
 
     # Choose a random order in which to permute the rows/columns of the matrix.
     order = random.permutation(n)
