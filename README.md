@@ -17,7 +17,8 @@ There are currently two versions of the code: ```Mantel.py``` and ```Mantel_with
 Requirements
 ------------
 
-SciPy: http://scipy.org
+- Python 2 or 3 (tested in 2.6, 2.7, and 3.4)
+- SciPy/NumPy (any version since 2008 should be fine)
 
 
 Usage example
