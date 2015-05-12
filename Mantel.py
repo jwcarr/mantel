@@ -96,7 +96,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     raise ValueError('The method should be set to "pearson" or "spearman"')
 
   # Most parts of the correlation coefficient will be the same for every
-  # permutation and are therefore computed outside the Monte Carlo loop.
+  # permutation and can therefore be computed outside the Monte Carlo loop.
 
   X_res = X - X.mean() # X residuals
   Y_res = Y - Y.mean() # Y residuals
@@ -135,7 +135,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Compute the correlation coefficient and store it to MC_corrs.
     MC_corrs[i] = (X_res * Y_res_permuted).sum() / denominator
 
-  # Compute the veridiical correlation coefficient.
+  # Compute the veridical correlation coefficient.
   r = (X_res * Y_res).sum() / denominator
 
   # Include the veridical correlation among the Monte Carlo correlations to

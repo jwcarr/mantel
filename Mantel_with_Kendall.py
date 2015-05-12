@@ -142,7 +142,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Compute the correlation coefficient and store it to MC_corrs.
     MC_corrs[i] = correlate(X, Y_permuted)[0]
 
-  # Compute the veridiical correlation coefficient.
+  # Compute the veridical correlation coefficient.
   r = correlate(X, Y)[0]
 
   # Include the veridical correlation among the Monte Carlo correlations to
