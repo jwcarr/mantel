@@ -1,4 +1,4 @@
-# MantelTest
+# MantelTest v1.1.2
 # https://github.com/jwcarr/MantelTest
 #
 # Copyright (c) 2014-2015 Jon W. Carr
