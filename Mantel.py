@@ -42,7 +42,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
       elements corresponds to the order of elements in the first matrix.
   perms : int, optional
       The number of permutations to perform (default: 10000). A larger number
-      gives a more reliable Z-score but takes longer to run.
+      gives more reliable results but takes longer to run.
   method : str, optional
       Type of correlation coefficient to use; either 'pearson' or 'spearman'
       (default: 'pearson').

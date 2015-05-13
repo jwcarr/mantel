@@ -42,7 +42,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
       elements corresponds to the order of elements in the first matrix.
   perms : int, optional
       The number of permutations to perform (default: 10000). A larger number
-      gives a more reliable Z-score but takes longer to run.
+      gives more reliable results but takes longer to run.
   method : str, optional
       Type of correlation coefficient to use; either 'pearson', 'spearman', or
       'kendall' (default: 'pearson'). N.B. the time complexity of Kendall's tau
@@ -66,7 +66,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   X = asarray(X, dtype=float)
   Y = asarray(Y, dtype=float)
 
-  # Check that X and Y are valid distance matrices.
+  # Check that X and Y are valid distance matrices/vectors.
 
   if distance.is_valid_dm(X) == False and distance.is_valid_y(X) == False:
     raise ValueError('X is not a valid distance matrix')

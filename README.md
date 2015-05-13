@@ -11,7 +11,7 @@ This implementation of the Mantel test takes two distance matrices (either redun
 
 Optionally, you can specify the number of randomizations to perform (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*), and which tail to test in the calculation of the empirical p-value.
 
-There are currently two versions of the code: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly more efficient but does not support Kendall’s *τ*.
+There are currently two versions of the code: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (especially when using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods.
 
 
 Requirements
