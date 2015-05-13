@@ -86,6 +86,11 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   if X.shape[0] != Y.shape[0]:
     raise ValueError('X and Y are not of equal size')
 
+  # Check for minimum size.
+
+  if X.shape[0] < 3:
+    raise ValueError('X and Y should represent at least 3 objects')
+
   # If Spearman correlation is requested, convert X and Y to ranks.
 
   if method == 'spearman':
