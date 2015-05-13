@@ -76,10 +76,10 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # If X or Y is a matrix, condense it to a vector.
 
   if len(X.shape) == 2:
-    X = distance.squareform(X, 'tovector', False)
+    X = distance.squareform(X, force='tovector', checks=False)
 
   if len(Y.shape) == 2:
-    Y = distance.squareform(Y, 'tovector', False)
+    Y = distance.squareform(Y, force='tovector', checks=False)
 
   # Check for size equality.
 
@@ -112,7 +112,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Although Y_res will be the same set of numbers on every permutation, the
   # order will be different each time. Therefore, we reformat Y_res as a matrix
   # so that we can take matrix permutations of the Y residuals.
-  Y_res_as_matrix = distance.squareform(Y_res, 'tomatrix', False)
+  Y_res_as_matrix = distance.squareform(Y_res, force='tomatrix', checks=False)
 
   # Determine the size of the matrix (i.e. number of rows/columns).
   n = Y_res_as_matrix.shape[0]

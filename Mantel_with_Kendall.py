@@ -79,23 +79,23 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   # X is vector and Y is vector
   if len(X.shape) == 1 and len(Y.shape) == 1:
-    Y_as_matrix = distance.squareform(Y, 'tomatrix', False)
+    Y_as_matrix = distance.squareform(Y, force='tomatrix', checks=False)
 
   # X is vector and Y is matrix
   elif len(X.shape) == 1 and len(Y.shape) == 2:
     Y_as_matrix = Y
-    Y = distance.squareform(Y, 'tovector', False)
+    Y = distance.squareform(Y, force='tovector', checks=False)
 
   # X is matrix and Y is vector
   elif len(X.shape) == 2 and len(Y.shape) == 1:
     Y_as_matrix = X
-    X, Y = Y, distance.squareform(X, 'tovector', False)
+    X, Y = Y, distance.squareform(X, force='tovector', checks=False)
 
   # X is matrix and Y is matrix
   elif len(X.shape) == 2 and len(Y.shape) == 2:
     Y_as_matrix = Y
-    X = distance.squareform(X, 'tovector', False)
-    Y = distance.squareform(Y, 'tovector', False)
+    X = distance.squareform(X, force='tovector', checks=False)
+    Y = distance.squareform(Y, force='tovector', checks=False)
 
   # Check for size equality.
 
