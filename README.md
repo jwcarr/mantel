@@ -1,4 +1,4 @@
-MantelTest v1.1.2
+MantelTest v1.1.3
 =================
 
 Efficient Python implementation of the Mantel test (Mantel, 1967). The Mantel test is a significance test of the correlation between two distance matrices.
