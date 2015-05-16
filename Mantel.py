@@ -1,4 +1,4 @@
-# MantelTest v1.1.3
+# MantelTest v1.2.0
 # https://github.com/jwcarr/MantelTest
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -23,6 +23,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from itertools import permutations
+from math import factorial
 from numpy import asarray, random, sqrt, zeros
 from scipy.spatial import distance
 from scipy.stats import rankdata
@@ -42,7 +44,9 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
       elements corresponds to the order of elements in the first matrix.
   perms : int, optional
       The number of permutations to perform (default: 10000). A larger number
-      gives more reliable results but takes longer to run.
+      gives more reliable results but takes longer to run. If the actual number
+      of possilbe permutations is smaller, the program will enumerate all
+      permutations. Enumeration can be forced by setting this argument to 0.
   method : str, optional
       Type of correlation coefficient to use; either 'pearson' or 'spearman'
       (default: 'pearson').
@@ -101,7 +105,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     raise ValueError('The method should be set to "pearson" or "spearman"')
 
   # Most parts of the correlation coefficient will be the same for every
-  # permutation and can therefore be computed outside the Monte Carlo loop.
+  # permutation and can therefore be computed outside the loop.
 
   X_res = X - X.mean() # X residuals
   Y_res = Y - Y.mean() # Y residuals
@@ -120,48 +124,75 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Initialize an empty array to store temporary vector permutations of Y_res.
   Y_res_permuted = zeros(Y_res.shape[0], dtype=float)
 
-  # Initialize an empty array to store the Monte Carlo sample correlations.
-  MC_corrs = zeros(perms, dtype=float)
+  # Either enumerate all permutations ...
 
-  # Monte Carlo loop.
+  if perms >= factorial(n) or perms == 0:
 
-  for i in range(perms-1):
+    # Initialize an empty array to store the correlations.
+    corrs = zeros(factorial(n), dtype=float)
 
-    # Choose a random order in which to permute the rows/columns of the matrix.
-    order = random.permutation(n)
+    # Enumerate all permutations of row/column orders.
+    orders = permutations(range(n))
 
-    # Take a permutation of the matrix.
-    Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
+    perms = 0
 
-    # Condense the permuted version of the matrix into a vector. Rather than use
-    # distance.squareform(), we call directly into the C wrapper for speed.
-    distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+    for order in orders:
 
-    # Compute the correlation coefficient and store it to MC_corrs.
-    MC_corrs[i] = (X_res * Y_res_permuted).sum() / denominator
+      # Take a permutation of the matrix.
+      Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
 
-  # Compute the veridical correlation coefficient.
-  r = (X_res * Y_res).sum() / denominator
+      # Condense the permuted version of the matrix. Rather than use
+      # distance.squareform(), we call directly into the C wrapper for speed.
+      distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
 
-  # Include the veridical correlation among the Monte Carlo correlations to
-  # prevent the p-value from being 0.
-  MC_corrs[perms-1] = r
+      # Compute the correlation coefficient and store it to corrs.
+      corrs[perms] = (X_res * Y_res_permuted).sum() / denominator
+
+      perms += 1
+
+  # ... or randomly sample from the space of permutations.
+
+  else:
+
+    # Initialize an empty array to store the correlations.
+    corrs = zeros(perms, dtype=float)
+
+    # Store the veridical correlation coefficient first.
+    corrs[0] = (X_res * Y_res).sum() / denominator
+
+    for i in range(1, perms):
+
+      # Choose a random order in which to permute the rows and columns.
+      order = random.permutation(n)
+
+      # Take a permutation of the matrix.
+      Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
+
+      # Condense the permuted version of the matrix. Rather than use
+      # distance.squareform(), we call directly into the C wrapper for speed.
+      distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+
+      # Compute the correlation coefficient and store it to corrs.
+      corrs[i] = (X_res * Y_res_permuted).sum() / denominator
+
+  # Assign veridical correlation to r.
+  r = corrs[0]
 
   # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (MC_corrs >= r).sum() / float(perms)
+    p = (corrs >= r).sum() / float(perms)
 
   elif tail == 'lower':
-    p = (MC_corrs <= r).sum() / float(perms)
+    p = (corrs <= r).sum() / float(perms)
 
   else:
     raise ValueError('The tail should be set to "upper" or "lower"')
 
   # Calculate the standard score.
 
-  m = MC_corrs.mean()
-  sd = MC_corrs.std()
+  m = corrs.mean()
+  sd = corrs.std()
   z = (r - m) / sd
 
   return r, p, z
