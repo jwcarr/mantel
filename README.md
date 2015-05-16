@@ -1,4 +1,4 @@
-MantelTest v1.2.0
+MantelTest v1.2.1
 =================
 
 Efficient Python implementation of the Mantel test (Mantel, 1967). The Mantel test is a significance test of the correlation between two distance matrices.
@@ -24,7 +24,7 @@ Requirements
 Usage example
 -------------
 
-First, let’s import the module:
+First import the module:
 
 ```python
 import Mantel
@@ -64,7 +64,13 @@ Since the p-value is less than 0.05 and the z-score is greater than 1.96, we can
 Additional notes
 ----------------
 
-In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations. If the number of requested permutations is greater than the actual number of possible permutations for a given matrix size, then the program ignores your request and just tests the veridical against the possible permutations. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. If, however, the number of possible permutations is greater than your request, the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, you’d be looking at multiple days of computation, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe!
+In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations. If the number of requested permutations is greater than the actual number of possible permutations for a given matrix size, then the program ignores your request and tests the veridical against all possible permutations. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. If, however, the number of possible permutations is greater than your request, the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, you’d be looking at multiple days of computation, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe!
+
+
+License
+-------
+
+MantelTest is licensed under the terms of the MIT License.
 
 
 References and links
@@ -73,5 +79,7 @@ References and links
 Mantel, N. (1967). The detection of disease clustering and a generalized regression approach. *Cancer Research*, *27*(2), 209–220.
 
 *Mantel Test* on Wikipedia: https://en.wikipedia.org/wiki/Mantel_test
+
+Website for this module: http://jwcarr.github.io/MantelTest/
 
 A guide to the Mantel test for linguists: http://www.jonwcarr.net/blog/2014/9/19/a-guide-to-the-mantel-test-for-linguists
