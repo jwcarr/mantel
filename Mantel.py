@@ -1,4 +1,4 @@
-# MantelTest v1.2.1
+# MantelTest v1.2.2
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -64,7 +64,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
       Standard score (z-score)
   """
 
-  # Ensure X and Y are arrays.
+  # Ensure that X and Y are formatted as Numpy arrays.
 
   X = asarray(X, dtype=float)
   Y = asarray(Y, dtype=float)
@@ -72,10 +72,10 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Check that X and Y are valid distance matrices/vectors.
 
   if distance.is_valid_dm(X) == False and distance.is_valid_y(X) == False:
-    raise ValueError('X is not a valid distance matrix')
+    raise ValueError('X is not a valid (condensed) distance matrix')
 
   if distance.is_valid_dm(Y) == False and distance.is_valid_y(Y) == False:
-    raise ValueError('Y is not a valid distance matrix')
+    raise ValueError('Y is not a valid (condensed) distance matrix')
 
   # If X or Y is a matrix, condense it to a vector.
 
@@ -101,8 +101,15 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     X = rankdata(X)
     Y = rankdata(Y)
 
+  # Check for valid method parameter.
+
   elif method != 'pearson':
     raise ValueError('The method should be set to "pearson" or "spearman"')
+
+  # Check for valid tail parameter.
+
+  if tail != 'upper' and tail != 'lower':
+    raise ValueError('The tail should be set to "upper" or "lower"')
 
   # Most parts of the correlation coefficient will be the same for every
   # permutation and can therefore be computed outside the loop.
@@ -124,7 +131,9 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Initialize an empty array to store temporary vector permutations of Y_res.
   Y_res_permuted = zeros(Y_res.shape[0], dtype=float)
 
-  # Either enumerate all permutations ...
+  # If the number of requested permutations is greater than the number of
+  # possible permutations (n!) or the perms parameter is set to 0, then run a
+  # deterministic Mantel test ...
 
   if perms >= factorial(n) or perms == 0:
 
@@ -150,7 +159,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
       perms += 1
 
-  # ... or randomly sample from the space of permutations.
+  # ... otherwise run a stochastic Mantel test.
 
   else:
 
@@ -185,9 +194,6 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   elif tail == 'lower':
     p = (corrs <= r).sum() / float(perms)
-
-  else:
-    raise ValueError('The tail should be set to "upper" or "lower"')
 
   # Calculate the standard score.
 
