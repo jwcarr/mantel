@@ -45,7 +45,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   perms : int, optional
       The number of permutations to perform (default: 10000). A larger number
       gives more reliable results but takes longer to run. If the actual number
-      of possilbe permutations is smaller, the program will enumerate all
+      of possible permutations is smaller, the program will enumerate all
       permutations. Enumeration can be forced by setting this argument to 0.
   method : str, optional
       Type of correlation coefficient to use; either 'pearson', 'spearman', or
