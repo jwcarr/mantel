@@ -1,4 +1,4 @@
-MantelTest v1.2.1
+MantelTest v1.2.2
 =================
 
 Efficient Python implementation of the Mantel test (Mantel, 1967). The Mantel test is a significance test of the correlation between two distance matrices.
@@ -9,9 +9,9 @@ Description
 
 This implementation of the Mantel test takes two distance matrices (either redundant matrices or condensed vectors) and returns: the veridical correlation, the empirical p-value, and a standard score (z-score).
 
-Optionally, you can specify the number of permutations to test against (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*), and which tail to test in the calculation of the empirical p-value.
+Optionally, you can specify: the number of permutations to produce (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*), and which tail to test in the calculation of the empirical p-value.
 
-There are currently two versions of the code: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (especially when using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods.
+There are currently two versions of the module: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (even more so if you’re using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods.
 
 
 Requirements
@@ -19,6 +19,23 @@ Requirements
 
 - Python 2 or 3 (tested in 2.6, 2.7, and 3.4)
 - SciPy/NumPy (any version since 2008 should be fine)
+
+
+Parameters
+----------
+
+- ```X``` *array_like*: First distance matrix (condensed or redundant).
+- ```Y``` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
+- ```perms``` *int*, optional: The number of permutations to perform (default: 10000). A larger number gives more reliable results but takes longer to run. If the actual number of possible permutations is smaller, the program will enumerate all permutations. Enumeration can be forced by setting this argument to 0.
+- ```method``` *str*, optional: Type of correlation coefficient to use; either 'pearson', 'spearman', or 'kendall' (default: 'pearson').
+- ```tail``` *str*, optional: Which tail to test in the calculation of the empirical p-value; either 'upper' or 'lower' (default: 'upper').
+
+Return values
+-------------
+
+- ```r``` *float*: Veridical correlation
+- ```p``` *float*: Empirical p-value
+- ```z``` *float*: Standard score (z-score)
 
 
 Usage example
