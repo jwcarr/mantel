@@ -120,8 +120,9 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Let's assume that we're going to permute the Y objects. Although the
   # Y_residuals will be the same set of numbers on every permutation, their
   # order will be different each time. Here we reformat Y_residuals as a matix
-  # in order to take matrix permutations. Permuting the residuals is a shortcut
-  # that avoids the computation the full correlation coefficient every time.
+  # in order to take matrix permutations. Matrix permuting the residuals is a
+  # shortcut that avoids the computation of the entire correlation coefficient
+  # on every permutation.
 
   Y_res_as_matrix = distance.squareform(Y_residuals, force='tomatrix', checks=False)
 
