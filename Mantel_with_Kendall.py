@@ -1,4 +1,4 @@
-# MantelTest v1.2.2
+# MantelTest v1.2.3
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -130,7 +130,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   if tail != 'upper' and tail != 'lower':
     raise ValueError('The tail should be set to "upper" or "lower"')
 
-  # Determine the size of the matrix (i.e. number of rows/columns).
+  # Determine the size of the matrix (i.e. number of rows/columns/objects).
   n = Y_as_matrix.shape[0]
 
   # Initialize an empty array to store temporary vector permutations of Y.
@@ -171,7 +171,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Initialize an empty array to store the correlations.
     corrs = zeros(perms, dtype=float)
 
-    # Store the veridical correlation coefficient first.
+    # Store the veridical correlation coefficient in first position.
     corrs[0] = correlate(X, Y)[0]
 
     for i in range(1, perms):
