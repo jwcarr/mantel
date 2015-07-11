@@ -1,4 +1,4 @@
-# MantelTest v1.2.3
+# MantelTest v1.2.4
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -25,7 +25,7 @@
 
 from itertools import permutations
 from math import factorial
-from numpy import asarray, random, zeros
+from numpy import arange, asarray, random, zeros
 from scipy.spatial import distance
 from scipy.stats import pearsonr, spearmanr, kendalltau
 
@@ -171,13 +171,16 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Initialize an empty array to store the correlations.
     corrs = zeros(perms, dtype=float)
 
+    # Initialize an array to store the permutation order.
+    order = arange(n)
+
     # Store the veridical correlation coefficient in first position.
     corrs[0] = correlate(X, Y)[0]
 
     for i in range(1, perms):
 
       # Choose a random order in which to permute the rows and columns.
-      order = random.permutation(n)
+      random.shuffle(order)
 
       # Take a permutation of the matrix.
       Y_as_matrix_permuted = Y_as_matrix[order, :][:, order]
