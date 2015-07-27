@@ -1,4 +1,4 @@
-# MantelTest v1.2.4
+# MantelTest v1.2.5
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -130,23 +130,23 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   if tail != 'upper' and tail != 'lower':
     raise ValueError('The tail should be set to "upper" or "lower"')
 
-  # Determine the size of the matrix (i.e. number of rows/columns/objects).
-  n = Y_as_matrix.shape[0]
+  m = Y_as_matrix.shape[0] # Number of objects
+  n = factorial(m) # Number of matrix permutations
 
   # Initialize an empty array to store temporary vector permutations of Y.
   Y_permuted = zeros(Y.shape[0], dtype=float)
 
   # If the number of requested permutations is greater than the number of
-  # possible permutations (n!) or the perms parameter is set to 0, then run a
+  # possible permutations (m!) or the perms parameter is set to 0, then run a
   # deterministic Mantel test ...
 
-  if perms >= factorial(n) or perms == 0:
+  if perms >= n or perms == 0:
 
     # Initialize an empty array to store the correlations.
-    corrs = zeros(factorial(n), dtype=float)
+    corrs = zeros(n, dtype=float)
 
     # Enumerate all permutations of row/column orders.
-    orders = permutations(range(n))
+    orders = permutations(range(m))
 
     perms = 0
 
@@ -172,7 +172,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     corrs = zeros(perms, dtype=float)
 
     # Initialize an array to store the permutation order.
-    order = arange(n)
+    order = arange(m)
 
     # Store the veridical correlation coefficient in first position.
     corrs[0] = correlate(X, Y)[0]

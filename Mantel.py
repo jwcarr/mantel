@@ -1,4 +1,4 @@
-# MantelTest v1.2.4
+# MantelTest v1.2.5
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -126,23 +126,23 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   Y_res_as_matrix = distance.squareform(Y_residuals, force='tomatrix', checks=False)
 
-  # Determine the size of the matrix (i.e. number of rows/columns/objects).
-  n = Y_res_as_matrix.shape[0]
+  m = Y_res_as_matrix.shape[0] # Number of objects
+  n = factorial(m) # Number of matrix permutations
 
   # Initialize an empty array to store temporary permutations of Y_residuals.
   Y_res_permuted = zeros(Y_residuals.shape[0], dtype=float)
 
   # If the number of requested permutations is greater than the number of
-  # possible permutations (n!) or the perms parameter is set to 0, then run a
+  # possible permutations (m!) or the perms parameter is set to 0, then run a
   # deterministic Mantel test ...
 
-  if perms >= factorial(n) or perms == 0:
+  if perms >= n or perms == 0:
 
     # Initialize an empty array to store the covariences.
-    covariences = zeros(factorial(n), dtype=float)
+    covariences = zeros(n, dtype=float)
 
     # Enumerate all permutations of row/column orders.
-    orders = permutations(range(n))
+    orders = permutations(range(m))
 
     perms = 0
 
@@ -168,7 +168,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     covariences = zeros(perms, dtype=float)
 
     # Initialize an array to store the permutation order.
-    order = arange(n)
+    order = arange(m)
 
     # Store the veridical covarience in first position.
     covariences[0] = (X_residuals * Y_residuals).sum()
@@ -189,7 +189,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
       covariences[i] = (X_residuals * Y_res_permuted).sum()
 
   # Calculate the veridical correlation coefficient.
-  r = covariences[0] / sqrt((X_residuals * X_residuals).sum() * (Y_residuals * Y_residuals).sum())
+  r = covariences[0] / sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
 
   # Calculate the empirical p-value for the upper or lower tail.
 
