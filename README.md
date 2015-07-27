@@ -78,10 +78,16 @@ In this example, the program will return the following:
 Since the p-value is less than 0.05 and the z-score is greater than 1.96, we can conclude that there is a significant correlation between these two sets of distances. This suggests that the species that live closer together tend to be more genetically related, while those that live further apart tend to be less genetically related.
 
 
-Additional notes
+Computation time
 ----------------
 
-In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations. If the number of requested permutations is greater than the actual number of possible permutations for a given matrix size, then the program ignores your request and tests the veridical against all possible permutations. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. If, however, the number of possible permutations is greater than your request, the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, you’d be looking at multiple days of computation, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe!
+To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations. This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
+
+
+Deterministic vs. stochastic Mantel tests
+-----------------------------------------
+
+In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations, then the program ignores your request and tests the veridical against all possible permutations of the matrix. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. Otherwise the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, it would take several days to compute a deterministic result, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe! However, for small matrices, a deterministic result should be preferred, since it is reproducible.
 
 
 License
