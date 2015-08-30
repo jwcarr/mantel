@@ -11,14 +11,15 @@ This implementation of the Mantel test takes two distance matrices (either redun
 
 Optionally, you can specify: the number of permutations to produce (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*), and which tail to test in the calculation of the empirical p-value.
 
-There are currently two versions of the module: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (even more so if you’re using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods.
+There are currently two versions of the module: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (even more so if you’re using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods but is slower and will probably be depreciated at some point.
 
 
 Requirements
 ------------
 
-- Python 2 or 3 (tested in 2.6, 2.7, and 3.4)
-- SciPy/NumPy (any version since 2008 should be fine)
+- Python 2 or 3
+- NumPy
+- SciPy
 
 
 Parameters
@@ -81,7 +82,7 @@ Since the p-value is less than 0.05 and the z-score is greater than 1.96, we can
 Computation time
 ----------------
 
-To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations. This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
+To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations (on a laptop computer). This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
 
 
 Deterministic vs. stochastic Mantel tests
