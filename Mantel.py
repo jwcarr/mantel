@@ -1,14 +1,12 @@
-# MantelTest v1.2.5
+# MantelTest v1.2.6
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
 # Licensed under the terms of the MIT License
 
+import numpy as np
 from itertools import permutations
-from math import factorial
-from numpy import arange, asarray, random, sqrt, zeros
-from scipy.spatial import distance
-from scipy.stats import rankdata
+from scipy import spatial, stats
 
 def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   """
@@ -47,24 +45,24 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   # Ensure that X and Y are formatted as Numpy arrays.
 
-  X = asarray(X, dtype=float)
-  Y = asarray(Y, dtype=float)
+  X = np.asarray(X, dtype=float)
+  Y = np.asarray(Y, dtype=float)
 
   # Check that X and Y are valid distance matrices/vectors.
 
-  if distance.is_valid_dm(X) == False and distance.is_valid_y(X) == False:
+  if spatial.distance.is_valid_dm(X) == False and spatial.distance.is_valid_y(X) == False:
     raise ValueError('X is not a valid (condensed) distance matrix')
 
-  if distance.is_valid_dm(Y) == False and distance.is_valid_y(Y) == False:
+  if spatial.distance.is_valid_dm(Y) == False and spatial.distance.is_valid_y(Y) == False:
     raise ValueError('Y is not a valid (condensed) distance matrix')
 
   # If X or Y is a matrix, condense it to a vector.
 
   if len(X.shape) == 2:
-    X = distance.squareform(X, force='tovector', checks=False)
+    X = spatial.distance.squareform(X, force='tovector', checks=False)
 
   if len(Y.shape) == 2:
-    Y = distance.squareform(Y, force='tovector', checks=False)
+    Y = spatial.distance.squareform(Y, force='tovector', checks=False)
 
   # Check for size equality.
 
@@ -79,8 +77,8 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # If Spearman correlation is requested, convert X and Y to ranks.
 
   if method == 'spearman':
-    X = rankdata(X)
-    Y = rankdata(Y)
+    X = stats.rankdata(X)
+    Y = stats.rankdata(Y)
 
   # Check for valid method parameter.
 
@@ -105,13 +103,13 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   # shortcut that avoids the computation of the entire correlation coefficient
   # on every permutation.
 
-  Y_res_as_matrix = distance.squareform(Y_residuals, force='tomatrix', checks=False)
+  Y_res_as_matrix = spatial.distance.squareform(Y_residuals, force='tomatrix', checks=False)
 
   m = Y_res_as_matrix.shape[0] # Number of objects
-  n = factorial(m) # Number of matrix permutations
+  n = np.math.factorial(m) # Number of matrix permutations
 
   # Initialize an empty array to store temporary permutations of Y_residuals.
-  Y_res_permuted = zeros(Y_residuals.shape[0], dtype=float)
+  Y_res_permuted = np.zeros(Y_residuals.shape[0], dtype=float)
 
   # If the number of requested permutations is greater than the number of
   # possible permutations (m!) or the perms parameter is set to 0, then run a
@@ -120,7 +118,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   if perms >= n or perms == 0:
 
     # Initialize an empty array to store the covariences.
-    covariences = zeros(n, dtype=float)
+    covariences = np.zeros(n, dtype=float)
 
     # Enumerate all permutations of row/column orders.
     orders = permutations(range(m))
@@ -134,7 +132,7 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
 
       # Condense the permuted version of the matrix. Rather than use
       # distance.squareform(), we call directly into the C wrapper for speed.
-      distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
 
       # Compute and store the covarience.
       covariences[perms] = (X_residuals * Y_res_permuted).sum()
@@ -146,10 +144,10 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
   else:
 
     # Initialize an empty array to store the covariences.
-    covariences = zeros(perms, dtype=float)
+    covariences = np.zeros(perms, dtype=float)
 
     # Initialize an array to store the permutation order.
-    order = arange(m)
+    order = np.arange(m)
 
     # Store the veridical covarience in first position.
     covariences[0] = (X_residuals * Y_residuals).sum()
@@ -157,20 +155,20 @@ def Test(X, Y, perms=10000, method='pearson', tail='upper'):
     for i in range(1, perms):
 
       # Choose a random order in which to permute the rows and columns.
-      random.shuffle(order)
+      np.random.shuffle(order)
 
       # Take a permutation of the matrix.
       Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
 
       # Condense the permuted version of the matrix. Rather than use
       # distance.squareform(), we call directly into the C wrapper for speed.
-      distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
 
       # Compute and store the covarience.
       covariences[i] = (X_residuals * Y_res_permuted).sum()
 
   # Calculate the veridical correlation coefficient.
-  r = covariences[0] / sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
+  r = covariences[0] / np.sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
 
   # Calculate the empirical p-value for the upper or lower tail.
 
