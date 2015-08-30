@@ -61,10 +61,10 @@ dists1 = [0.2, 0.4, 0.3, 0.6, 0.9, 0.4] # E.g. genetic distances
 dists2 = [0.3, 0.3, 0.2, 0.7, 0.8, 0.3] # E.g. geographical distances
 ```
 
-We pass the data to the ```Test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’, ‘spearman’, or ‘kendall’), and which tail to test (either ‘upper’ or ‘lower’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
+We pass the data to the ```test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’, ‘spearman’, or ‘kendall’), and which tail to test (either ‘upper’ or ‘lower’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
 
 ```python
-Mantel.Test(dists1, dists2, perms=10000, method='pearson', tail='upper')
+Mantel.test(dists1, dists2, perms=10000, method='pearson', tail='upper')
 ```
 
 This will measure the veridical Pearson correlation between the two sets of pairwise distances. It then repeatedly measures the correlation again and again under permutations of one of the distance matrices to produce a distribution of correlations under the null hypothesis. Finally, it computes the empirical p-value (the proportion of correlations that were greater than or equal to the veridical correlation) and compares the veridical correlation with the mean and standard deviation of the correlations to generate a z-score.
@@ -82,7 +82,7 @@ Since the p-value is less than 0.05 and the z-score is greater than 1.96, we can
 Computation time
 ----------------
 
-To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations (on a laptop computer). This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
+To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time (on a laptop computer) for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations. This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
 
 
 Deterministic vs. stochastic Mantel tests
