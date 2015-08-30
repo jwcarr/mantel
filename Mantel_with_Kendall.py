@@ -8,7 +8,7 @@ import numpy as np
 from itertools import permutations
 from scipy import spatial, stats
 
-def Test(X, Y, perms=10000, method='pearson', tail='upper'):
+def test(X, Y, perms=10000, method='pearson', tail='upper'):
   """
   Takes two distance matrices (either redundant matrices or condensed vectors)
   and performs a Mantel test. The Mantel test is a significance test of the
