@@ -1,4 +1,4 @@
-# MantelTest v1.2.6
+# MantelTest v1.2.8
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -123,9 +123,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Enumerate all permutations of row/column orders.
     orders = permutations(range(m))
 
-    perms = 0
-
-    for order in orders:
+    for i, order in enumerate(orders):
 
       # Take a permutation of the matrix.
       Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
@@ -135,9 +133,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
       spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
 
       # Compute and store the covarience.
-      covariences[perms] = (X_residuals * Y_res_permuted).sum()
-
-      perms += 1
+      covariences[i] = (X_residuals * Y_res_permuted).sum()
 
   # ... otherwise run a stochastic Mantel test.
 
@@ -173,10 +169,10 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (covariences >= covariences[0]).sum() / float(perms)
+    p = (covariences >= covariences[0]).sum() / float(covariences.shape[0])
 
   elif tail == 'lower':
-    p = (covariences <= covariences[0]).sum() / float(perms)
+    p = (covariences <= covariences[0]).sum() / float(covariences.shape[0])
 
   # Calculate the standard score.
   z = (covariences[0] - covariences.mean()) / covariences.std()

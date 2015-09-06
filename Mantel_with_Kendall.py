@@ -1,4 +1,4 @@
-# MantelTest v1.2.6
+# MantelTest v1.2.8
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -127,9 +127,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
     # Enumerate all permutations of row/column orders.
     orders = permutations(range(m))
 
-    perms = 0
-
-    for order in orders:
+    for i, order in enumerate(orders):
 
       # Take a permutation of the matrix.
       Y_as_matrix_permuted = Y_as_matrix[order, :][:, order]
@@ -139,9 +137,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
       spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_as_matrix_permuted, Y_permuted)
 
       # Compute the correlation coefficient and store it to corrs.
-      corrs[perms] = correlate(X, Y_permuted)[0]
-
-      perms += 1
+      corrs[i] = correlate(X, Y_permuted)[0]
 
   # ... otherwise run a stochastic Mantel test.
 
@@ -177,10 +173,10 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (corrs >= r).sum() / float(perms)
+    p = (corrs >= r).sum() / float(corrs.shape[0])
 
   elif tail == 'lower':
-    p = (corrs <= r).sum() / float(perms)
+    p = (corrs <= r).sum() / float(corrs.shape[0])
 
   # Calculate the standard score.
 
