@@ -9,9 +9,7 @@ Description
 
 This implementation of the Mantel test takes two distance matrices (either redundant matrices or condensed vectors) and returns: the veridical correlation, the empirical p-value, and a standard score (z-score).
 
-Optionally, you can specify: the number of permutations to produce (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r*, Spearman’s *ρ*, or Kendall’s *τ*), and which tail to test in the calculation of the empirical p-value.
-
-There are currently two versions of the module: ```Mantel.py``` and ```Mantel_with_Kendall.py```. ```Mantel.py``` is significantly faster (even more so if you’re using the Spearman correlation), but it does not support Kendall’s *τ*. ```Mantel_with_Kendall.py``` supports all three correlation methods but is slower and will probably be depreciated at some point.
+Optionally, you can specify: the number of permutations to produce (a larger number gives a more reliable p-value and z-score but takes longer to run), which type of correlation coefficient to use (Pearson’s *r* or Spearman’s *ρ*), and which tail to test in the calculation of the empirical p-value.
 
 
 Requirements
@@ -28,7 +26,7 @@ Parameters
 - ```X``` *array_like*: First distance matrix (condensed or redundant).
 - ```Y``` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
 - ```perms``` *int*, optional: The number of permutations to perform (default: 10000). A larger number gives more reliable results but takes longer to run. If the actual number of possible permutations is smaller, the program will enumerate all permutations. Enumeration can be forced by setting this argument to 0.
-- ```method``` *str*, optional: Type of correlation coefficient to use; either 'pearson', 'spearman', or 'kendall' (default: 'pearson').
+- ```method``` *str*, optional: Type of correlation coefficient to use; either 'pearson' or 'spearman' (default: 'pearson').
 - ```tail``` *str*, optional: Which tail to test in the calculation of the empirical p-value; either 'upper' or 'lower' (default: 'upper').
 
 Return values
@@ -61,7 +59,7 @@ dists1 = [0.2, 0.4, 0.3, 0.6, 0.9, 0.4] # E.g. genetic distances
 dists2 = [0.3, 0.3, 0.2, 0.7, 0.8, 0.3] # E.g. geographical distances
 ```
 
-We pass the data to the ```test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’, ‘spearman’, or ‘kendall’), and which tail to test (either ‘upper’ or ‘lower’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
+We pass the data to the ```test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’ or ‘spearman’), and which tail to test (either ‘upper’ or ‘lower’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
 
 ```python
 Mantel.test(dists1, dists2, perms=10000, method='pearson', tail='upper')
@@ -82,13 +80,13 @@ Since the p-value is less than 0.05 and the z-score is greater than 1.96, we can
 Computation time
 ----------------
 
-To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time (on a laptop computer) for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations. This applies only to the Pearson and Spearman correlations – Kendall’s *τ* will be much slower.
+To estimate how long it will take to perform a Mantel test on your data, refer to ```computation_time.pdf```, which shows computation time (on a laptop computer) for 3×3 through 500×500 matrices using 1,000, 10,000, and 100,000 permutations.
 
 
 Deterministic vs. stochastic Mantel tests
 -----------------------------------------
 
-In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations, then the program ignores your request and tests the veridical against all possible permutations of the matrix. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. Otherwise the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, it would take several days to compute a deterministic result, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe! However, for small matrices, a deterministic result should be preferred, since it is reproducible.
+In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations (as is the case here), then the program ignores your request and tests the veridical against all possible permutations of the matrix. This gives a deterministic result and can be forced by setting the ```perms``` argument to ```0```. Otherwise the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, it would take several days to compute a deterministic result, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe! However, for small matrices, a deterministic result should be preferred, since it is reproducible.
 
 
 License
