@@ -1,4 +1,4 @@
-# MantelTest v1.2.8
+# MantelTest v1.2.9
 # http://jwcarr.github.io/MantelTest/
 #
 # Copyright (c) 2014-2015 Jon W. Carr
@@ -48,15 +48,15 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   X = np.asarray(X, dtype=float)
   Y = np.asarray(Y, dtype=float)
 
-  # Check that X and Y are valid distance matrices/vectors.
+  # Check that X and Y are valid distance matrices.
 
   if spatial.distance.is_valid_dm(X) == False and spatial.distance.is_valid_y(X) == False:
-    raise ValueError('X is not a valid (condensed) distance matrix')
+    raise ValueError('X is not a valid condensed or redundant distance matrix')
 
   if spatial.distance.is_valid_dm(Y) == False and spatial.distance.is_valid_y(Y) == False:
-    raise ValueError('Y is not a valid (condensed) distance matrix')
+    raise ValueError('Y is not a valid condensed or redundant distance matrix')
 
-  # If X or Y is a matrix, condense it to a vector.
+  # If X or Y is a redundant distance matrix, reduce it to a condensed distance matrix.
 
   if len(X.shape) == 2:
     X = spatial.distance.squareform(X, force='tovector', checks=False)
@@ -90,26 +90,41 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   if tail != 'upper' and tail != 'lower':
     raise ValueError('The tail should be set to "upper" or "lower"')
 
+  # Now we're ready to start the Mantel test using a number of optimizations:
+  #
+  # 1. We don't need to recalculate the pairwise distances between the Y objects
+  #    on every permutation. They've already been calculated, so we can use a
+  #    simple matrix shuffling technique to avoid recomputing them. This works
+  #    like memoization.
+  #
+  # 2. Rather than compute the correlation coefficient, we'll just compute the
+  #    covariance. This works because the denominator in the equation for the
+  #    correlation coefficient will end up being the same however the Y objects
+  #    are permuted. Removing the denominator leaves us with the covariance.
+  #
+  # 3. Rather than permute the Y distances and derive the residuals to calculate
+  #    the covariance with the X distances, we'll represent the Y residuals in
+  #    the matrix and shuffle those directly.
+  #
+  # 4. If the number of possible permutations is less than the number of
+  #    permutations that were requested, we'll run a deterministic test where
+  #    we try all possible permutations rather than sample the permutation
+  #    space. This gives a faster, deterministic result.
+
   # Calculate the X and Y residuals, which will be used to compute the
-  # covarience under each permutation.
+  # covariance under each permutation.
 
   X_residuals = X - X.mean()
   Y_residuals = Y - Y.mean()
 
-  # Let's assume that we're going to permute the Y objects. Although the
-  # Y_residuals will be the same set of numbers on every permutation, their
-  # order will be different each time. Here we reformat Y_residuals as a matix
-  # in order to take matrix permutations. Matrix permuting the residuals is a
-  # shortcut that avoids the computation of the entire correlation coefficient
-  # on every permutation.
+  # Expand the Y residuals to a redundant matrix format.
+  Y_residuals_as_matrix = spatial.distance.squareform(Y_residuals, force='tomatrix', checks=False)
 
-  Y_res_as_matrix = spatial.distance.squareform(Y_residuals, force='tomatrix', checks=False)
-
-  m = Y_res_as_matrix.shape[0] # Number of objects
-  n = np.math.factorial(m) # Number of matrix permutations
+  m = Y_residuals_as_matrix.shape[0] # Number of objects
+  n = np.math.factorial(m) # Number of possible matrix permutations
 
   # Initialize an empty array to store temporary permutations of Y_residuals.
-  Y_res_permuted = np.zeros(Y_residuals.shape[0], dtype=float)
+  Y_residuals_permuted = np.zeros(Y_residuals.shape[0], dtype=float)
 
   # If the number of requested permutations is greater than the number of
   # possible permutations (m!) or the perms parameter is set to 0, then run a
@@ -117,64 +132,63 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   if perms >= n or perms == 0:
 
-    # Initialize an empty array to store the covariences.
-    covariences = np.zeros(n, dtype=float)
+    # Initialize an empty array to store the covariances.
+    covariances = np.zeros(n, dtype=float)
 
-    # Enumerate all permutations of row/column orders.
-    orders = permutations(range(m))
-
-    for i, order in enumerate(orders):
+    # Enumerate all permutations of row/column orders and iterate over them.
+    for i, order in enumerate(permutations(range(m))):
 
       # Take a permutation of the matrix.
-      Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
+      Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
 
       # Condense the permuted version of the matrix. Rather than use
       # distance.squareform(), we call directly into the C wrapper for speed.
-      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_residuals_as_matrix_permuted, Y_residuals_permuted)
 
-      # Compute and store the covarience.
-      covariences[i] = (X_residuals * Y_res_permuted).sum()
+      # Compute and store the covariance.
+      covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
   # ... otherwise run a stochastic Mantel test.
 
   else:
 
-    # Initialize an empty array to store the covariences.
-    covariences = np.zeros(perms, dtype=float)
+    # Initialize an empty array to store the covariances.
+    covariances = np.zeros(perms, dtype=float)
 
     # Initialize an array to store the permutation order.
     order = np.arange(m)
 
-    # Store the veridical covarience in first position.
-    covariences[0] = (X_residuals * Y_residuals).sum()
+    # Store the veridical covariance in 0th position...
+    covariances[0] = (X_residuals * Y_residuals).sum()
 
+    # ...and then run the random permutations.
     for i in range(1, perms):
 
       # Choose a random order in which to permute the rows and columns.
       np.random.shuffle(order)
 
       # Take a permutation of the matrix.
-      Y_res_as_matrix_permuted = Y_res_as_matrix[order, :][:, order]
+      Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
 
       # Condense the permuted version of the matrix. Rather than use
       # distance.squareform(), we call directly into the C wrapper for speed.
-      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_res_as_matrix_permuted, Y_res_permuted)
+      spatial.distance._distance_wrap.to_vector_from_squareform_wrap(Y_residuals_as_matrix_permuted, Y_residuals_permuted)
 
-      # Compute and store the covarience.
-      covariences[i] = (X_residuals * Y_res_permuted).sum()
+      # Compute and store the covariance.
+      covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
-  # Calculate the veridical correlation coefficient.
-  r = covariences[0] / np.sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
+  # Calculate the veridical correlation coefficient from the veridical covariance.
+  r = covariances[0] / np.sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
 
   # Calculate the empirical p-value for the upper or lower tail.
 
   if tail == 'upper':
-    p = (covariences >= covariences[0]).sum() / float(covariences.shape[0])
+    p = (covariances >= covariances[0]).sum() / float(covariances.shape[0])
 
   elif tail == 'lower':
-    p = (covariences <= covariences[0]).sum() / float(covariences.shape[0])
+    p = (covariances <= covariances[0]).sum() / float(covariances.shape[0])
 
   # Calculate the standard score.
-  z = (covariences[0] - covariences.mean()) / covariences.std()
+  z = (covariances[0] - covariances.mean()) / covariances.std()
 
   return r, p, z
