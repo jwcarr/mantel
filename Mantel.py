@@ -1,14 +1,14 @@
-# MantelTest v1.2.9
+# MantelTest v1.2.10
 # http://jwcarr.github.io/MantelTest/
 #
-# Copyright (c) 2014-2015 Jon W. Carr
+# Copyright (c) 2014-2016 Jon W. Carr
 # Licensed under the terms of the MIT License
 
 import numpy as np
 from itertools import permutations
 from scipy import spatial, stats
 
-def test(X, Y, perms=10000, method='pearson', tail='upper'):
+def test(X, Y, perms=10000, method='pearson', tail='two-tail'):
   """
   Takes two distance matrices (either redundant matrices or condensed vectors)
   and performs a Mantel test. The Mantel test is a significance test of the
@@ -31,7 +31,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
       (default: 'pearson').
   tail : str, optional
       Which tail to test in the calculation of the empirical p-value; either
-      'upper', 'lower' or 'two-tail' (default: 'upper').
+      'upper', 'lower', or 'two-tail' (default: 'two-tail').
 
   Returns
   -------
@@ -44,63 +44,52 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   """
 
   # Ensure that X and Y are formatted as Numpy arrays.
-
-  X = np.asarray(X, dtype=float)
-  Y = np.asarray(Y, dtype=float)
+  X, Y = np.asarray(X, dtype=float), np.asarray(Y, dtype=float)
 
   # Check that X and Y are valid distance matrices.
-
   if spatial.distance.is_valid_dm(X) == False and spatial.distance.is_valid_y(X) == False:
     raise ValueError('X is not a valid condensed or redundant distance matrix')
-
   if spatial.distance.is_valid_dm(Y) == False and spatial.distance.is_valid_y(Y) == False:
     raise ValueError('Y is not a valid condensed or redundant distance matrix')
 
   # If X or Y is a redundant distance matrix, reduce it to a condensed distance matrix.
-
   if len(X.shape) == 2:
     X = spatial.distance.squareform(X, force='tovector', checks=False)
-
   if len(Y.shape) == 2:
     Y = spatial.distance.squareform(Y, force='tovector', checks=False)
 
   # Check for size equality.
-
   if X.shape[0] != Y.shape[0]:
     raise ValueError('X and Y are not of equal size')
 
   # Check for minimum size.
-
   if X.shape[0] < 3:
     raise ValueError('X and Y should represent at least 3 objects')
 
   # If Spearman correlation is requested, convert X and Y to ranks.
-
   if method == 'spearman':
-    X = stats.rankdata(X)
-    Y = stats.rankdata(Y)
+    X, Y = stats.rankdata(X), stats.rankdata(Y)
 
   # Check for valid method parameter.
-
   elif method != 'pearson':
     raise ValueError('The method should be set to "pearson" or "spearman"')
 
   # Check for valid tail parameter.
-
   if tail != 'upper' and tail != 'lower' and tail != 'two-tail':
-    raise ValueError('The tail should be set to "upper", "lower" or "two-tail"')
+    raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
 
   # Now we're ready to start the Mantel test using a number of optimizations:
   #
-  # 1. We don't need to recalculate the pairwise distances between the Y objects
+  # 1. We don't need to recalculate the pairwise distances between the objects
   #    on every permutation. They've already been calculated, so we can use a
   #    simple matrix shuffling technique to avoid recomputing them. This works
   #    like memoization.
   #
-  # 2. Rather than compute the correlation coefficient, we'll just compute the
-  #    covariance. This works because the denominator in the equation for the
-  #    correlation coefficient will end up being the same however the Y objects
-  #    are permuted. Removing the denominator leaves us with the covariance.
+  # 2. Rather than compute correlation coefficients, we'll just compute the
+  #    covariances. This works because the denominator in the equation for the
+  #    correlation coefficient will yield the same result however the objects
+  #    are permuted, making it redundant. Removing the denominator leaves us
+  #    with the covariance.
   #
   # 3. Rather than permute the Y distances and derive the residuals to calculate
   #    the covariance with the X distances, we'll represent the Y residuals in
@@ -113,15 +102,16 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   # Calculate the X and Y residuals, which will be used to compute the
   # covariance under each permutation.
+  X_residuals, Y_residuals = X - X.mean(), Y - Y.mean()
 
-  X_residuals = X - X.mean()
-  Y_residuals = Y - Y.mean()
-
-  # Expand the Y residuals to a redundant matrix format.
+  # Expand the Y residuals to a redundant matrix.
   Y_residuals_as_matrix = spatial.distance.squareform(Y_residuals, force='tomatrix', checks=False)
 
-  m = Y_residuals_as_matrix.shape[0] # Number of objects
-  n = np.math.factorial(m) # Number of possible matrix permutations
+  # Get the number of objects.
+  m = Y_residuals_as_matrix.shape[0]
+
+  # Calculate the number of possible matrix permutations.
+  n = np.math.factorial(m)
 
   # Initialize an empty array to store temporary permutations of Y_residuals.
   Y_residuals_permuted = np.zeros(Y_residuals.shape[0], dtype=float)
@@ -129,7 +119,6 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   # If the number of requested permutations is greater than the number of
   # possible permutations (m!) or the perms parameter is set to 0, then run a
   # deterministic Mantel test ...
-
   if perms >= n or perms == 0:
 
     # Initialize an empty array to store the covariances.
@@ -149,7 +138,6 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
       covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
   # ... otherwise run a stochastic Mantel test.
-
   else:
 
     # Initialize an empty array to store the covariances.
@@ -181,13 +169,10 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
   r = covariances[0] / np.sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
 
   # Calculate the empirical p-value for the upper or lower tail.
-
   if tail == 'upper':
     p = (covariances >= covariances[0]).sum() / float(covariances.shape[0])
-
   elif tail == 'lower':
     p = (covariances <= covariances[0]).sum() / float(covariances.shape[0])
-  
   elif tail == 'two-tail':
     p = (abs(covariances) >= abs(covariances[0])).sum() / float(covariances.shape[0])
 
