@@ -27,7 +27,7 @@ Parameters
 - ```Y``` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
 - ```perms``` *int*, optional: The number of permutations to perform (default: 10000). A larger number gives more reliable results but takes longer to run. If the actual number of possible permutations is smaller, the program will enumerate all permutations. Enumeration can be forced by setting this argument to 0.
 - ```method``` *str*, optional: Type of correlation coefficient to use; either 'pearson' or 'spearman' (default: 'pearson').
-- ```tail``` *str*, optional: Which tail to test in the calculation of the empirical p-value; either 'upper' or 'lower' (default: 'upper').
+- ```tail``` *str*, optional: Which tail to test in the calculation of the empirical p-value; either 'upper', 'lower', or 'two-tail' (default: 'two-tail').
 
 Return values
 -------------
@@ -59,7 +59,7 @@ dists1 = [0.2, 0.4, 0.3, 0.6, 0.9, 0.4] # E.g. genetic distances
 dists2 = [0.3, 0.3, 0.2, 0.7, 0.8, 0.3] # E.g. geographical distances
 ```
 
-We pass the data to the ```test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’ or ‘spearman’), and which tail to test (either ‘upper’ or ‘lower’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
+We pass the data to the ```test()``` function of the ```Mantel``` module and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’ or ‘spearman’), and which tail to test (either ‘upper’, ‘lower’, or ‘two-tail’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
 
 ```python
 Mantel.test(dists1, dists2, perms=10000, method='pearson', tail='upper')
