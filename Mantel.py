@@ -31,7 +31,7 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
       (default: 'pearson').
   tail : str, optional
       Which tail to test in the calculation of the empirical p-value; either
-      'upper' or 'lower' (default: 'upper').
+      'upper', 'lower' or 'two-tail' (default: 'upper').
 
   Returns
   -------
@@ -87,8 +87,8 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   # Check for valid tail parameter.
 
-  if tail != 'upper' and tail != 'lower':
-    raise ValueError('The tail should be set to "upper" or "lower"')
+  if tail != 'upper' and tail != 'lower' and tail != 'two-tail':
+    raise ValueError('The tail should be set to "upper", "lower" or "two-tail"')
 
   # Now we're ready to start the Mantel test using a number of optimizations:
   #
@@ -187,6 +187,9 @@ def test(X, Y, perms=10000, method='pearson', tail='upper'):
 
   elif tail == 'lower':
     p = (covariances <= covariances[0]).sum() / float(covariances.shape[0])
+  
+  elif tail == 'two-tail':
+    p = (abs(covariances) >= abs(covariances[0])).sum() / float(covariances.shape[0])
 
   # Calculate the standard score.
   z = (covariances[0] - covariances.mean()) / covariances.std()
