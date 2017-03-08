@@ -104,4 +104,4 @@ Mantel, N. (1967). The detection of disease clustering and a generalized regress
 
 Website for this module: http://jwcarr.github.io/MantelTest/
 
-A guide to the Mantel test for linguists: http://www.jonwcarr.net/blog/2014/9/19/a-guide-to-the-mantel-test-for-linguists
+A guide to the Mantel test for linguists: https://joncarr.net/s/a-guide-to-the-mantel-test-for-linguists.html
