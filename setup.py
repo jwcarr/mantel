@@ -24,6 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Mathematics",
     ],
     python_requires=">=3.5",
     install_requires=["numpy>=1.10", "scipy>=1.0"],
