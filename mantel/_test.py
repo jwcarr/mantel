@@ -3,7 +3,7 @@ import numpy as np
 from scipy import spatial, stats
 
 
-def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
+def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False):
     """
     Takes two distance matrices (either redundant matrices or condensed vectors)
     and performs a Mantel test. The Mantel test is a significance test of the
@@ -27,6 +27,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
     tail : str, optional
             Which tail to test in the calculation of the empirical p-value; either
             'upper', 'lower', or 'two-tail' (default: 'two-tail').
+    ignore_nans : bool, optional
+            Whether or not to ignore NaNs in the input data (default: False).
 
     Returns
     -------
@@ -79,6 +81,14 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
     if tail != "upper" and tail != "lower" and tail != "two-tail":
         raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
 
+    # If ignore_nans is True, use the Numpy nanmean and nansum functions.
+    if ignore_nans:
+        mean = np.nanmean
+        sum = np.nansum
+    else:
+        mean = np.mean
+        sum = np.sum
+
     # Now we're ready to start the Mantel test using a number of optimizations:
     #
     # 1. We don't need to recalculate the pairwise distances between the objects
@@ -103,7 +113,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
 
     # Calculate the X and Y residuals, which will be used to compute the
     # covariance under each permutation.
-    X_residuals, Y_residuals = X - X.mean(), Y - Y.mean()
+    X_residuals, Y_residuals = X - mean(X), Y - mean(Y)
 
     # Expand the Y residuals to a redundant matrix.
     Y_residuals_as_matrix = spatial.distance.squareform(
@@ -140,7 +150,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
             )
 
             # Compute and store the covariance.
-            covariances[i] = (X_residuals * Y_residuals_permuted).sum()
+            covariances[i] = sum(X_residuals * Y_residuals_permuted)
 
     # ... otherwise run a stochastic Mantel test.
     else:
@@ -152,7 +162,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
         order = np.arange(m)
 
         # Store the veridical covariance in 0th position...
-        covariances[0] = (X_residuals * Y_residuals).sum()
+        covariances[0] = sum(X_residuals * Y_residuals)
 
         # ...and then run the random permutations.
         for i in range(1, perms):
@@ -170,10 +180,10 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail"):
             )
 
             # Compute and store the covariance.
-            covariances[i] = (X_residuals * Y_residuals_permuted).sum()
+            covariances[i] = sum(X_residuals * Y_residuals_permuted)
 
     # Calculate the veridical correlation coefficient from the veridical covariance.
-    r = covariances[0] / np.sqrt((X_residuals ** 2).sum() * (Y_residuals ** 2).sum())
+    r = covariances[0] / np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals ** 2))
 
     # Calculate the empirical p-value for the upper or lower tail.
     if tail == "upper":
