@@ -45,12 +45,12 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Check that X and Y are valid distance matrices.
     if (
-        spatial.distance.is_valid_dm(X) == False
+        spatial.distance.is_valid_dm(np.nan_to_num(X)) == False
         and spatial.distance.is_valid_y(X) == False
     ):
         raise ValueError("X is not a valid condensed or redundant distance matrix")
     if (
-        spatial.distance.is_valid_dm(Y) == False
+        spatial.distance.is_valid_dm(np.nan_to_num(Y)) == False
         and spatial.distance.is_valid_y(Y) == False
     ):
         raise ValueError("Y is not a valid condensed or redundant distance matrix")
