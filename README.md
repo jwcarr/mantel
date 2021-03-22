@@ -23,6 +23,7 @@ Usage
 - `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the actual number of possible permutations is smaller, the program will enumerate all permutations. Enumeration can be forced by setting this argument to `0`.
 - `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
 - `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either `upper`, `lower`, or `two-tail` (default: `two-tail`).
+- `ignore_nans` *bool*, optional: Whether or not to ignore NaNs in the input data (default: False).
 
 The `mantel.test()` function returns three values:
 
