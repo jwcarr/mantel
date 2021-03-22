@@ -81,13 +81,13 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     if tail != "upper" and tail != "lower" and tail != "two-tail":
         raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
 
-    # If ignore_nans is True, use the Numpy nanmean and nansum functions.
-    if ignore_nans:
-        mean = np.nanmean
-        sum = np.nansum
-    else:
-        mean = np.mean
-        sum = np.sum
+    finite_X, finite_Y = np.isfinite(X), np.isfinite(Y)
+    if not finite_X.all():
+        raise ValueError(
+            "X cannot contain NaNs (but Y may contain NaNs, so consider reordering X and Y)"
+        )
+    if not ignore_nans and not finite_Y.all():
+        raise ValueError('Y may contain NaNs, but only if "ignore_nans" is set to True')
 
     # Now we're ready to start the Mantel test using a number of optimizations:
     #
@@ -113,7 +113,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Calculate the X and Y residuals, which will be used to compute the
     # covariance under each permutation.
-    X_residuals, Y_residuals = X - mean(X), Y - mean(Y)
+    X_residuals = X - X[finite_Y].mean()
+    Y_residuals = Y - Y[finite_Y].mean()
 
     # Expand the Y residuals to a redundant matrix.
     Y_residuals_as_matrix = spatial.distance.squareform(
@@ -150,7 +151,14 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             )
 
             # Compute and store the covariance.
-            covariances[i] = sum(X_residuals * Y_residuals_permuted)
+            if ignore_nans:
+                finite_Y_permuted = np.isfinite(Y_residuals_permuted)
+                covariances[i] = (
+                    X_residuals[finite_Y_permuted]
+                    * Y_residuals_permuted[finite_Y_permuted]
+                ).sum()
+            else:
+                covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
     # ... otherwise run a stochastic Mantel test.
     else:
@@ -162,7 +170,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         order = np.arange(m)
 
         # Store the veridical covariance in 0th position...
-        covariances[0] = sum(X_residuals * Y_residuals)
+        covariances[0] = (X_residuals * Y_residuals).sum()
 
         # ...and then run the random permutations.
         for i in range(1, perms):
@@ -180,10 +188,19 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             )
 
             # Compute and store the covariance.
-            covariances[i] = sum(X_residuals * Y_residuals_permuted)
+            if ignore_nans:
+                finite_Y_permuted = np.isfinite(Y_residuals_permuted)
+                covariances[i] = (
+                    X_residuals[finite_Y_permuted]
+                    * Y_residuals_permuted[finite_Y_permuted]
+                ).sum()
+            else:
+                covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
     # Calculate the veridical correlation coefficient from the veridical covariance.
-    r = covariances[0] / np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals ** 2))
+    r = covariances[0] / np.sqrt(
+        (X_residuals[finite_Y] ** 2).sum() * (Y_residuals[finite_Y] ** 2).sum()
+    )
 
     # Calculate the empirical p-value for the upper or lower tail.
     if tail == "upper":
