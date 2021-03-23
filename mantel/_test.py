@@ -170,7 +170,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         order = np.arange(m)
 
         # Store the veridical covariance in 0th position...
-        covariances[0] = (X_residuals * Y_residuals).sum()
+        covariances[0] = (X_residuals[finite_Y] * Y_residuals[finite_Y]).sum()
 
         # ...and then run the random permutations.
         for i in range(1, perms):
