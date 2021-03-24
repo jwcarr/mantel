@@ -41,8 +41,9 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             Standard score (z-score)
     """
 
-    # Ensure that X and Y are formatted as Numpy arrays.
-    X, Y = np.asarray(X, dtype=float), np.asarray(Y, dtype=float)
+    # Ensure that X and Y are represented as Numpy arrays.
+    X = np.asarray(X)
+    Y = np.asarray(Y)
 
     # Check that X and Y are valid distance matrices.
     if (
@@ -63,11 +64,11 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         Y = spatial.distance.squareform(Y, force="tovector", checks=False)
 
     # Check for size equality.
-    if X.shape[0] != Y.shape[0]:
+    if len(X) != len(Y):
         raise ValueError("X and Y are not of equal size")
 
     # Check for minimum size.
-    if X.shape[0] < 3:
+    if len(X) < 3:
         raise ValueError("X and Y should represent at least 3 objects")
 
     # Check finiteness of X and Y
@@ -78,8 +79,11 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     finite_Y = np.isfinite(Y)
     if not ignore_nans and not finite_Y.all():
         raise ValueError('Y may contain NaNs, but "ignore_nans" must be set to True')
+    if ignore_nans and finite_Y.all():
+        ignore_nans = False  # ignore_nans is True but Y contains no nans
 
     # If Spearman correlation is requested, convert X and Y to ranks.
+    method = method.lower()
     if method == "spearman":
         X, Y = stats.rankdata(X), stats.rankdata(Y)
         Y[~finite_Y] = np.nan  # retain any nans, so that these can be ignored later
@@ -89,7 +93,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         raise ValueError('The method should be set to "pearson" or "spearman"')
 
     # Check for valid tail parameter.
-    if tail != "upper" and tail != "lower" and tail != "two-tail":
+    tail = tail.lower()
+    if tail not in ["upper", "lower", "two-tail"]:
         raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
 
     # Now we're ready to start the Mantel test using a number of optimizations:
@@ -116,8 +121,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Calculate the X and Y residuals, which will be used to compute the
     # covariance under each permutation.
-    X_residuals = X - X[finite_Y].mean()
-    Y_residuals = Y - Y[finite_Y].mean()
+    X_residuals = X - np.mean(X[finite_Y])
+    Y_residuals = Y - np.mean(Y[finite_Y])
 
     # Expand the Y residuals to a redundant matrix.
     Y_residuals_as_matrix = spatial.distance.squareform(
@@ -125,13 +130,13 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     )
 
     # Get the number of objects.
-    m = Y_residuals_as_matrix.shape[0]
+    m = len(Y_residuals_as_matrix)
 
     # Calculate the number of possible matrix permutations.
     n = np.math.factorial(m)
 
     # Initialize an empty array to store temporary permutations of Y_residuals.
-    Y_residuals_permuted = np.zeros(Y_residuals.shape[0], dtype=float)
+    Y_residuals_permuted = np.zeros(len(Y_residuals))
 
     # If the number of requested permutations is greater than the number of
     # possible permutations (m!) or the perms parameter is set to 0, then run a
@@ -139,9 +144,9 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     if perms >= n or perms == 0:
 
         # Initialize an empty array to store the covariances.
-        covariances = np.zeros(n, dtype=float)
+        covariances = np.zeros(n)
 
-        # Enumerate all permutations of row/column orders and iterate over them.
+        # Iterate over all permutations of row/column orders.
         for i, order in enumerate(permutations(range(m))):
 
             # Take a permutation of the matrix.
@@ -169,13 +174,13 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     else:
 
         # Initialize an empty array to store the covariances.
-        covariances = np.zeros(perms, dtype=float)
+        covariances = np.zeros(perms)
 
         # Initialize an array to store the permutation order.
         order = np.arange(m)
 
         # Store the veridical covariance in 0th position...
-        covariances[0] = (X_residuals[finite_Y] * Y_residuals[finite_Y]).sum()
+        covariances[0] = sum(X_residuals[finite_Y] * Y_residuals[finite_Y])
 
         # ...and then run the random permutations.
         for i in range(1, perms):
@@ -206,20 +211,18 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Calculate the veridical correlation coefficient from the veridical covariance.
     r = covariances[0] / np.sqrt(
-        (X_residuals[finite_Y] ** 2).sum() * (Y_residuals[finite_Y] ** 2).sum()
+        sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
     )
 
     # Calculate the empirical p-value for the upper or lower tail.
     if tail == "upper":
-        p = (covariances >= covariances[0]).sum() / float(covariances.shape[0])
+        p = sum(covariances >= covariances[0]) / len(covariances)
     elif tail == "lower":
-        p = (covariances <= covariances[0]).sum() / float(covariances.shape[0])
+        p = sum(covariances <= covariances[0]) / len(covariances)
     elif tail == "two-tail":
-        p = (abs(covariances) >= abs(covariances[0])).sum() / float(
-            covariances.shape[0]
-        )
+        p = sum(abs(covariances) >= abs(covariances[0])) / len(covariances)
 
     # Calculate the standard score.
-    z = (covariances[0] - covariances.mean()) / covariances.std()
+    z = (covariances[0] - np.mean(covariances)) / np.std(covariances)
 
     return r, p, z
