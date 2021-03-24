@@ -155,10 +155,12 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             # Compute and store the covariance.
             if ignore_nans:
                 finite_Y_permuted = np.isfinite(Y_residuals_permuted)
-                covariances[i] = (
-                    X_residuals[finite_Y_permuted]
-                    * Y_residuals_permuted[finite_Y_permuted]
-                ).sum()
+                # since we are now ignoring different values in X, the X
+                # residuals need to be recomputed because mean is different
+                reduced_X = X[finite_Y_permuted]
+                reduced_X_residuals = reduced_X - reduced_X.mean()
+                reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
+                covariances[i] = (reduced_X_residuals * reduced_Y_residuals).sum()
             else:
                 covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
@@ -192,10 +194,12 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             # Compute and store the covariance.
             if ignore_nans:
                 finite_Y_permuted = np.isfinite(Y_residuals_permuted)
-                covariances[i] = (
-                    X_residuals[finite_Y_permuted]
-                    * Y_residuals_permuted[finite_Y_permuted]
-                ).sum()
+                # since we are now ignoring different values in X, the X
+                # residuals need to be recomputed because mean is different
+                reduced_X = X[finite_Y_permuted]
+                reduced_X_residuals = reduced_X - reduced_X.mean()
+                reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
+                covariances[i] = (reduced_X_residuals * reduced_Y_residuals).sum()
             else:
                 covariances[i] = (X_residuals * Y_residuals_permuted).sum()
 
