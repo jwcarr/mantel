@@ -20,10 +20,10 @@ Usage
 
 - `X` *array_like*: First distance matrix (condensed or redundant).
 - `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
-- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the actual number of possible permutations is smaller, the program will enumerate all permutations. Enumeration can be forced by setting this argument to `0`.
+- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested. This can be forced by setting `perms` to `0`.
 - `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
 - `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either `upper`, `lower`, or `two-tail` (default: `two-tail`).
-- `ignore_nans` *bool*, optional: Whether or not to ignore NaNs in the input data (default: False).
+- `ignore_nans` *bool*, optional: Ignore `np.nan` values in the Y matrix (default: False). This can be useful if you have missing values in one of the matrices.
 
 The `mantel.test()` function returns three values:
 

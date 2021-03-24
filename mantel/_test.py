@@ -17,10 +17,10 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             Second distance matrix (condensed or redundant), where the order of
             elements corresponds to the order of elements in the first matrix.
     perms : int, optional
-            The number of permutations to perform (default: 10000). A larger number
-            gives more reliable results but takes longer to run. If the actual number
-            of possible permutations is smaller, the program will enumerate all
-            permutations. Enumeration can be forced by setting this argument to 0.
+            The number of permutations to perform (default: 10000). A larger
+            number gives more reliable results but takes longer to run. If the
+            number of possible permutations is smaller, all permutations will
+            be tested. This can be forced by setting perms to 0.
     method : str, optional
             Type of correlation coefficient to use; either 'pearson' or 'spearman'
             (default: 'pearson').
@@ -28,7 +28,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             Which tail to test in the calculation of the empirical p-value; either
             'upper', 'lower', or 'two-tail' (default: 'two-tail').
     ignore_nans : bool, optional
-            Whether or not to ignore NaNs in the input data (default: False).
+            Ignore NaN values in the Y matrix (default: False). This can be
+            useful if you have missing values in one of the matrices.
 
     Returns
     -------
