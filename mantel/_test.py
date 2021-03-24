@@ -69,9 +69,19 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     if X.shape[0] < 3:
         raise ValueError("X and Y should represent at least 3 objects")
 
+    # Check finiteness of X and Y
+    if not np.isfinite(X).all():
+        raise ValueError(
+            "X cannot contain NaNs (but Y may contain NaNs, so consider reordering X and Y)"
+        )
+    finite_Y = np.isfinite(Y)
+    if not ignore_nans and not finite_Y.all():
+        raise ValueError('Y may contain NaNs, but "ignore_nans" must be set to True')
+
     # If Spearman correlation is requested, convert X and Y to ranks.
     if method == "spearman":
         X, Y = stats.rankdata(X), stats.rankdata(Y)
+        Y[~finite_Y] = np.nan  # retain any nans, so that these can be ignored later
 
     # Check for valid method parameter.
     elif method != "pearson":
@@ -80,14 +90,6 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     # Check for valid tail parameter.
     if tail != "upper" and tail != "lower" and tail != "two-tail":
         raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
-
-    finite_X, finite_Y = np.isfinite(X), np.isfinite(Y)
-    if not finite_X.all():
-        raise ValueError(
-            "X cannot contain NaNs (but Y may contain NaNs, so consider reordering X and Y)"
-        )
-    if not ignore_nans and not finite_Y.all():
-        raise ValueError('Y may contain NaNs, but only if "ignore_nans" is set to True')
 
     # Now we're ready to start the Mantel test using a number of optimizations:
     #
