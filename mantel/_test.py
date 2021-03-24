@@ -99,22 +99,17 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Now we're ready to start the Mantel test using a number of optimizations:
     #
-    # 1. We don't need to recalculate the pairwise distances between the objects
-    #    on every permutation. They've already been calculated, so we can use a
-    #    simple matrix shuffling technique to avoid recomputing them. This works
-    #    like memoization.
-    #
-    # 2. Rather than compute correlation coefficients, we'll just compute the
+    # 1. Rather than compute correlation coefficients, we'll just compute the
     #    covariances. This works because the denominator in the equation for the
     #    correlation coefficient will yield the same result however the objects
     #    are permuted, making it redundant. Removing the denominator leaves us
     #    with the covariance.
     #
-    # 3. Rather than permute the Y distances and derive the residuals to calculate
+    # 2. Rather than permute the Y distances and derive the residuals to calculate
     #    the covariance with the X distances, we'll represent the Y residuals in
     #    the matrix and shuffle those directly.
     #
-    # 4. If the number of possible permutations is less than the number of
+    # 3. If the number of possible permutations is less than the number of
     #    permutations that were requested, we'll run a deterministic test where
     #    we try all possible permutations rather than sample the permutation
     #    space. This gives a faster, deterministic result.
@@ -129,100 +124,115 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         Y_residuals, force="tomatrix", checks=False
     )
 
-    # Get the number of objects.
-    m = len(Y_residuals_as_matrix)
-
-    # Calculate the number of possible matrix permutations.
-    n = np.math.factorial(m)
-
-    # Initialize an empty array to store temporary permutations of Y_residuals.
-    Y_residuals_permuted = np.zeros(len(Y_residuals))
+    m = len(Y_residuals_as_matrix)  # number of objects
+    n = np.math.factorial(m)  # number of possible matrix permutations
 
     # If the number of requested permutations is greater than the number of
     # possible permutations (m!) or the perms parameter is set to 0, then run a
-    # deterministic Mantel test ...
+    # deterministic Mantel test
     if perms >= n or perms == 0:
+        if ignore_nans:
+            correlations = deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix)
+        else:
+            correlations = deterministic_test(m, n, X_residuals, Y_residuals_as_matrix)
+        # correlations[0] is the veridical correlation
 
-        # Initialize an empty array to store the covariances.
-        covariances = np.zeros(n)
-
-        # Iterate over all permutations of row/column orders.
-        for i, order in enumerate(permutations(range(m))):
-
-            # Take a permutation of the matrix.
-            Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
-
-            # Condense the permuted version of the matrix. Rather than use
-            # distance.squareform(), we call directly into the C wrapper for speed.
-            spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
-                Y_residuals_as_matrix_permuted, Y_residuals_permuted
-            )
-
-            # Compute and store the covariance.
-            if ignore_nans:
-                finite_Y_permuted = np.isfinite(Y_residuals_permuted)
-                # since we are now ignoring different values in X, the X
-                # residuals need to be recomputed because mean is different
-                reduced_X = X[finite_Y_permuted]
-                reduced_X_residuals = reduced_X - reduced_X.mean()
-                reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
-                covariances[i] = (reduced_X_residuals * reduced_Y_residuals).sum()
-            else:
-                covariances[i] = (X_residuals * Y_residuals_permuted).sum()
-
-    # ... otherwise run a stochastic Mantel test.
     else:
+        if ignore_nans:
+            correlations = stochastic_test_with_nans(m, perms, X, Y_residuals_as_matrix)
+        else:
+            correlations = stochastic_test(m, perms, X_residuals, Y_residuals_as_matrix)
+        correlations[0] = sum(X_residuals[finite_Y] * Y_residuals[finite_Y]) / np.sqrt(
+            sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
+        )  # compute veridical correlation and place in positon 0
 
-        # Initialize an empty array to store the covariances.
-        covariances = np.zeros(perms)
+    r = correlations[0]
 
-        # Initialize an array to store the permutation order.
-        order = np.arange(m)
-
-        # Store the veridical covariance in 0th position...
-        covariances[0] = sum(X_residuals[finite_Y] * Y_residuals[finite_Y])
-
-        # ...and then run the random permutations.
-        for i in range(1, perms):
-
-            # Choose a random order in which to permute the rows and columns.
-            np.random.shuffle(order)
-
-            # Take a permutation of the matrix.
-            Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
-
-            # Condense the permuted version of the matrix. Rather than use
-            # distance.squareform(), we call directly into the C wrapper for speed.
-            spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
-                Y_residuals_as_matrix_permuted, Y_residuals_permuted
-            )
-
-            # Compute and store the covariance.
-            if ignore_nans:
-                finite_Y_permuted = np.isfinite(Y_residuals_permuted)
-                # since we are now ignoring different values in X, the X
-                # residuals need to be recomputed because mean is different
-                reduced_X = X[finite_Y_permuted]
-                reduced_X_residuals = reduced_X - reduced_X.mean()
-                reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
-                covariances[i] = (reduced_X_residuals * reduced_Y_residuals).sum()
-            else:
-                covariances[i] = (X_residuals * Y_residuals_permuted).sum()
-
-    # Calculate the veridical correlation coefficient from the veridical covariance.
-    r = covariances[0] / np.sqrt(
-        sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
-    )
-
-    # Calculate the empirical p-value for the upper or lower tail.
     if tail == "upper":
-        p = sum(covariances >= covariances[0]) / len(covariances)
+        p = sum(correlations >= r) / len(correlations)
     elif tail == "lower":
-        p = sum(covariances <= covariances[0]) / len(covariances)
+        p = sum(correlations <= r) / len(correlations)
     elif tail == "two-tail":
-        p = sum(abs(covariances) >= abs(covariances[0])) / len(covariances)
+        p = sum(abs(correlations) >= abs(r)) / len(correlations)
 
-    # Calculate the standard score.
-    z = (covariances[0] - np.mean(covariances)) / np.std(covariances)
+    z = (r - np.mean(correlations)) / np.std(correlations)
 
     return r, p, z
+
+
+def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
+    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    covariances = np.zeros(n)
+    for i, order in enumerate(permutations(range(m))):
+        Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
+        spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
+            Y_residuals_as_matrix_permuted, Y_residuals_permuted
+        )
+        covariances[i] = (X_residuals * Y_residuals_permuted).sum()
+    denominator = np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals_permuted ** 2))
+    return covariances / denominator
+
+
+def deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix):
+    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    correlations = np.zeros(n)
+    for i, order in enumerate(permutations(range(m))):
+        Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
+        spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
+            Y_residuals_as_matrix_permuted, Y_residuals_permuted
+        )
+        # Since on each permutation we will be ignoring different values in X,
+        # the X_residuals need to be recomputed each time depending on which
+        # values in permuted Y are finite.
+        finite_Y_permuted = np.isfinite(Y_residuals_permuted)
+        reduced_X = X[finite_Y_permuted]
+        reduced_X_residuals = reduced_X - reduced_X.mean()
+        reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
+        covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
+        # The denominator will be different on each permutation
+        denominator = np.sqrt(
+            sum(reduced_X_residuals ** 2) * sum(reduced_Y_residuals ** 2)
+        )
+        correlations[i] = covariance / denominator
+    return correlations
+
+
+def stochastic_test(m, n, X_residuals, Y_residuals_as_matrix):
+    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    covariances = np.zeros(n)
+    order = np.arange(m)
+    for i in range(1, n):
+        np.random.shuffle(order)
+        Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
+        spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
+            Y_residuals_as_matrix_permuted, Y_residuals_permuted
+        )
+        covariances[i] = (X_residuals * Y_residuals_permuted).sum()
+    denominator = np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals_permuted ** 2))
+    return covariances / denominator
+
+
+def stochastic_test_with_nans(m, n, X, Y_residuals_as_matrix):
+    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    correlations = np.zeros(n)
+    order = np.arange(m)
+    for i in range(1, n):
+        np.random.shuffle(order)
+        Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
+        spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
+            Y_residuals_as_matrix_permuted, Y_residuals_permuted
+        )
+        # Since on each permutation we will be ignoring different values in X,
+        # the X_residuals need to be recomputed each time depending on which
+        # values in permuted Y are finite.
+        finite_Y_permuted = np.isfinite(Y_residuals_permuted)
+        reduced_X = X[finite_Y_permuted]
+        reduced_X_residuals = reduced_X - reduced_X.mean()
+        reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
+        covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
+        # The denominator will be different on each permutation
+        denominator = np.sqrt(
+            sum(reduced_X_residuals ** 2) * sum(reduced_Y_residuals ** 2)
+        )
+        correlations[i] = covariance / denominator
+    return correlations
