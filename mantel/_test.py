@@ -3,42 +3,42 @@ import numpy as np
 from scipy import spatial, stats
 
 
-def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False):
+def compute_correlations(X, Y, perms=10000, method="pearson", ignore_nans=False):
     """
-    Takes two distance matrices (either redundant matrices or condensed vectors)
-    and performs a Mantel test. The Mantel test is a significance test of the
-    correlation between two distance matrices.
+    Takes two distance matrices (either redundant matrices or
+    condensed vectors) and computes the correlation between symmetric
+    permutations two distance matrices.
 
     Parameters
     ----------
     X : array_like
             First distance matrix (condensed or redundant).
     Y : array_like
-            Second distance matrix (condensed or redundant), where the order of
-            elements corresponds to the order of elements in the first matrix.
+            Second distance matrix (condensed or redundant), where the
+            order of elements corresponds to the order of elements in
+            the first matrix.
     perms : int, optional
-            The number of permutations to perform (default: 10000). A larger
-            number gives more reliable results but takes longer to run. If the
-            number of possible permutations is smaller, all permutations will
-            be tested. This can be forced by setting perms to 0.
+            The number of permutations to perform (default: 10000). A
+            larger number gives more reliable results but takes longer
+            to run. If the number of possible permutations is smaller,
+            all permutations will be tested. This can be forced by
+            setting perms to 0.
     method : str, optional
-            Type of correlation coefficient to use; either 'pearson' or 'spearman'
-            (default: 'pearson').
-    tail : str, optional
-            Which tail to test in the calculation of the empirical p-value; either
-            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+            Type of correlation coefficient to use; either 'pearson'
+            or 'spearman' (default: 'pearson').
     ignore_nans : bool, optional
-            Ignore NaN values in the Y matrix (default: False). This can be
-            useful if you have missing values in one of the matrices.
+            Ignore NaN values in the Y matrix (default: False). This
+            can be useful if you have missing values in one of the
+            matrices.
 
     Returns
     -------
-    r : float
-            Veridical correlation
-    p : float
-            Empirical p-value
-    z : float
-            Standard score (z-score)
+    correlations : array of floats
+            Computed correlation coefficients between symmetric
+            permutations two distance matrices.  The first element of
+            the array is the veridical correlation.  The array size is
+            the number of computed permutations (see 'perms'
+            parameter).
     """
 
     # Ensure that X and Y are represented as Numpy arrays.
@@ -92,27 +92,27 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     elif method != "pearson":
         raise ValueError('The method should be set to "pearson" or "spearman"')
 
-    # Check for valid tail parameter.
-    tail = tail.lower()
-    if tail not in ["upper", "lower", "two-tail"]:
-        raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
-
-    # Now we're ready to start the Mantel test using a number of optimizations:
+    # Now we're ready to start the computation of correlation
+    # coefficients of permuted matrices using a number of
+    # optimizations:
     #
-    # 1. Rather than compute correlation coefficients, we'll just compute the
-    #    covariances. This works because the denominator in the equation for the
-    #    correlation coefficient will yield the same result however the objects
-    #    are permuted, making it redundant. Removing the denominator leaves us
-    #    with the covariance.
+    # 1. Rather than compute correlation coefficients, we'll just
+    #    compute the covariances. This works because the denominator
+    #    in the equation for the correlation coefficient will yield
+    #    the same result however the objects are permuted, making it
+    #    redundant. Removing the denominator leaves us with the
+    #    covariance.
     #
-    # 2. Rather than permute the Y distances and derive the residuals to calculate
-    #    the covariance with the X distances, we'll represent the Y residuals in
-    #    the matrix and shuffle those directly.
+    # 2. Rather than permute the Y distances and derive the residuals
+    #    to calculate the covariance with the X distances, we'll
+    #    represent the Y residuals in the matrix and shuffle those
+    #    directly.
     #
-    # 3. If the number of possible permutations is less than the number of
-    #    permutations that were requested, we'll run a deterministic test where
-    #    we try all possible permutations rather than sample the permutation
-    #    space. This gives a faster, deterministic result.
+    # 3. If the number of possible permutations is less than the
+    #    number of permutations that were requested, we'll run a
+    #    deterministic test where we try all possible permutations
+    #    rather than sample the permutation space. This gives a
+    #    faster, deterministic result.
 
     # Calculate the X and Y residuals, which will be used to compute the
     # covariance under each permutation.
@@ -146,6 +146,41 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
         )  # compute veridical correlation and place in positon 0
 
+    return correlations
+
+
+def mantel_test_from_correlations(correlations, tail="two-tail"):
+    """
+    Takes correlations previously computed (see compute_correlations()
+    function) and return the Mantel test values. The Mantel test is a
+    significance test of the correlation between two distance
+    matrices.
+
+    Parameters
+    ----------
+    correlations : array of floats
+            The correlations computed by the compute_correlations() function.
+    tail : str, optional
+            Which tail to test in the calculation of the empirical p-value; either
+            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+
+    Returns
+    -------
+    r : float
+            Veridical correlation
+    p : float
+            Empirical p-value
+    m : float
+            Arithmetic mean of correlation coefficients computed for permuted matrices
+    s : float
+            Standard deviation of correlation coefficients computed for permuted matrices
+
+    """
+    # Check for valid tail parameter.
+    tail = tail.lower()
+    if tail not in ["upper", "lower", "two-tail"]:
+        raise ValueError('The tail should be set to "upper", "lower", or "two-tail"')
+
     r = correlations[0]
 
     if tail == "upper":
@@ -155,7 +190,98 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     elif tail == "two-tail":
         p = sum(abs(correlations) >= abs(r)) / len(correlations)
 
-    z = (r - np.mean(correlations)) / np.std(correlations)
+    m = np.mean(correlations)
+    s = np.std(correlations)
+
+    return r, p, m, s
+
+
+def mantel_test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False):
+    """
+    Takes two distance matrices (either redundant matrices or condensed vectors)
+    and performs a Mantel test. The Mantel test is a significance test of the
+    correlation between two distance matrices.
+
+    Parameters
+    ----------
+    X : array_like
+            First distance matrix (condensed or redundant).
+    Y : array_like
+            Second distance matrix (condensed or redundant), where the order of
+            elements corresponds to the order of elements in the first matrix.
+    perms : int, optional
+            The number of permutations to perform (default: 10000). A larger
+            number gives more reliable results but takes longer to run. If the
+            number of possible permutations is smaller, all permutations will
+            be tested. This can be forced by setting perms to 0.
+    method : str, optional
+            Type of correlation coefficient to use; either 'pearson' or 'spearman'
+            (default: 'pearson').
+    tail : str, optional
+            Which tail to test in the calculation of the empirical p-value; either
+            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+    ignore_nans : bool, optional
+            Ignore NaN values in the Y matrix (default: False). This can be
+            useful if you have missing values in one of the matrices.
+
+    Returns
+    -------
+    r : float
+            Veridical correlation
+    p : float
+            Empirical p-value
+    m : float
+            Arithmetic mean of correlation coefficients computed for permuted matrices
+    s : float
+            Standard deviation of correlation coefficients computed for permuted matrices
+    """
+
+    correlations = compute_correlations(X, Y, perms=perms, method=method, ignore_nans=ignore_nans)
+
+    return mantel_test_from_correlations(correlations, tail=tail)
+
+
+def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False):
+    """
+    Takes two distance matrices (either redundant matrices or condensed vectors)
+    and performs a Mantel test. The Mantel test is a significance test of the
+    correlation between two distance matrices.
+
+    Parameters
+    ----------
+    X : array_like
+            First distance matrix (condensed or redundant).
+    Y : array_like
+            Second distance matrix (condensed or redundant), where the order of
+            elements corresponds to the order of elements in the first matrix.
+    perms : int, optional
+            The number of permutations to perform (default: 10000). A larger
+            number gives more reliable results but takes longer to run. If the
+            number of possible permutations is smaller, all permutations will
+            be tested. This can be forced by setting perms to 0.
+    method : str, optional
+            Type of correlation coefficient to use; either 'pearson' or 'spearman'
+            (default: 'pearson').
+    tail : str, optional
+            Which tail to test in the calculation of the empirical p-value; either
+            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+    ignore_nans : bool, optional
+            Ignore NaN values in the Y matrix (default: False). This can be
+            useful if you have missing values in one of the matrices.
+
+    Returns
+    -------
+    r : float
+            Veridical correlation
+    p : float
+            Empirical p-value
+    z : float
+            Standard score (z-score)
+    """
+
+    r, p, m, s = mantel_test(X, Y, perms=perms, method=method, ignore_nans=ignore_nans)
+
+    z = (r - m) / s
 
     return r, p, z
 

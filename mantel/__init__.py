@@ -1,4 +1,4 @@
-from ._test import test
+from ._test import compute_correlations, mantel_test_from_correlations, mantel_test, test
 
 try:
     from ._version import __version__

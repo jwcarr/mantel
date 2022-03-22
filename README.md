@@ -16,7 +16,9 @@ pip install mantel
 Usage
 -----
 
-`mantel` provides one function, `test()`, which takes the following arguments:
+`mantel` provides several functions.
+
+The historical one (and probably the one you want to use) is, `test()`, which takes the following arguments:
 
 - `X` *array_like*: First distance matrix (condensed or redundant).
 - `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
@@ -72,6 +74,52 @@ In this example, the program will return the following:
 Since the p-value is less than 0.05 (or alternatively, the z-score is greater than 1.96), we can conclude that there is a significant correlation between these two sets of distances. This suggests that the species that live closer together tend to be more genetically related, while those that live further apart tend to be less genetically related.
 
 In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations (as is the case here), then the program ignores your request and tests the veridical against all possible permutations of the matrix. This gives a deterministic result and can be forced by setting the `perms` argument to `0`. Otherwise the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, it would take several days to compute a deterministic result, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe! However, for small matrices, a deterministic result should be preferred, since it is reproducible.
+
+Some other intermediate functions are provided whose parameters are
+almost the same as the `test()` function (only other parameters are
+described here):
+
+
+The function `compute_correlations()` takes two distance matrices (either redundant matrices or condensed vectors) and computes the correlation between symmetric permutations two distance matrices:
+
+- `X` *array_like*: First distance matrix (condensed or redundant).
+- `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
+- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested. This can be forced by setting `perms` to `0`.
+- `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
+- `ignore_nans` *bool*, optional: Ignore `np.nan` values in the Y matrix (default: False). This can be useful if you have missing values in one of the matrices.
+
+The `mantel.compute_correlations()` function returns an array of floats:
+
+- `correlations` *array of floats*: Computed correlation coefficients between symmetric permutations two distance matrices. The first element of the array is the veridical correlation. The array size is the number of computed permutations (see 'perms' parameter).
+
+The function `mantel_test_from_correlations()` takes correlations previously computed (see `mantel.compute_correlations()`) function) and return the Mantel test values. The Mantel test is a significance test of the correlation between two distance matrices:
+
+- `correlations` : *array of floats*: The correlations computed by the `mantel.compute_correlations()` function.
+- `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either  `upper`, `lower`, or `two-tail` (default: `two-tail`).
+
+The `mantel.mantel_test_from_correlations()` function returns four values:
+
+- `r` *float*: The veridical correlation
+- `p` *float*: The empirical p-value
+- `m` *float*: The arithmetic mean of correlation coefficients computed for permuted matrices
+- `s` *float*: The standard deviation of correlation coefficients computed for permuted matrices
+
+
+The function `mantel_test()` takes two distance matrices (either redundant matrices or condensed vectors) and performs a Mantel test. The Mantel test is a significance test of the correlation between two distance matrices:
+
+- `X` *array_like*: First distance matrix (condensed or redundant).
+- `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
+- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested. This can be forced by setting `perms` to `0`.
+- `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
+- `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either `upper`, `lower`, or `two-tail` (default: `two-tail`).
+- `ignore_nans` *bool*, optional: Ignore `np.nan` values in the Y matrix (default: False). This can be useful if you have missing values in one of the matrices.
+
+The `mantel.mantel_test()` function returns four values:
+
+- `r` *float*: The veridical correlation
+- `p` *float*: The empirical p-value
+- `m` *float*: The arithmetic mean of correlation coefficients computed for permuted matrices
+- `s` *float*: The standard deviation of correlation coefficients computed for permuted matrices
 
 
 License
