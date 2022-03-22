@@ -1,6 +1,11 @@
 from itertools import permutations
 import numpy as np
 from scipy import spatial, stats
+try:
+    import matplotlib.pyplot as plt
+    _has_matplotlib = True
+except ImportError:
+    _has_matplotlib = False
 
 
 def compute_correlations(X, Y, perms=10000, method="pearson", ignore_nans=False):
@@ -284,6 +289,120 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     z = (r - m) / s
 
     return r, p, z
+
+
+def plot(correlations, plot, tail="two-tail",
+         significance_level=0.05,
+         gaussian_background_color='blue', gaussian_background_alpha=0.1,
+         gaussian_color='blue', gaussian_alpha=0.3,
+         gaussian_curve_color='blue', gaussian_curve_alpha=0.3,
+         hist_fill_color='orange', hist_edge_color='green', hist_alpha=0.7,
+         acceptance_color='green', rejection_color='red'):
+    """
+    Plot the correlations previously computed (see
+    compute_correlations() function) and on the given matplotlib axes,
+    as well as the theoretical normal distribution with its confidence
+    interval highlighted.
+
+    Parameters
+    ----------
+    correlations : array of floats
+            The correlations computed by the compute_correlations() function.
+    plot : matplotlib.axes.Axes
+            The matplotlib figure to draw on.
+    tail : str, optional
+            Which tail to test in the calculation of the empirical p-value; either
+            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+    significance_level : float
+            Significance level of the null hypothesis of the Mantel
+            test (default: 5%)
+    gaussian_background_color: str
+            Color used for painting the area under the normal
+            distribution curve (default: 'blue').
+
+    gaussian_background_alpha: float (between [0, 1])
+            Opacity (alpha channel) of the area under the normal
+            distribution curve (default: 0.1).
+
+    gaussian_color: str
+            Color used for painting the area of the confidence
+            interval under the normal distribution curve (default:
+            'blue').
+    gaussian_alpha: float (between [0, 1])
+            Opacity (alpha channel) of the area of the confidence
+            interval under the normal distribution curve (default:
+            0.3).
+    gaussian_curve_color: str
+            Color used for painting the normal distribution curve and
+            the confidence interval limits (default: 'blue').
+    gaussian_curve_alpha: float (between [0, 1])
+            Opacity (alpha channel) of the normal distribution curve
+            and the confidence interval limits (default: 0.3).
+    hist_fill_color: str
+            Color used for filling the correlations histogram bars
+            (default: 'orange').
+    hist_alpha: float (between [0, 1])
+            Opacity (alpha channel) of the correlations histogram bars
+            (default: 0.7).
+    hist_edge_color: str
+            Color used for drawing the correlations histogram bar
+            edges (default: 'green').
+    acceptance_color: str
+            Color used for drawing the vertical line and the label of
+            the veridical correlation if the null hypothesis is
+            accepted according to the significance level value
+            (default: 'green').
+    rejection_color: str
+            Color used for drawing the vertical line and the label of
+            the veridical correlation if the null hypothesis is
+            rejected according to the significance level value
+            (default: 'red').
+
+    Returns
+    -------
+    Nothing, but draw on the given plot object.
+    Since this function requires the matplotlib library, an exception
+    is raised if this package isn't available.
+    """
+    if not _has_matplotlib:
+        raise Exception("In order to produce histograms, you need to install the 'matplotlib' library first.")
+
+    r, p, m, s = mantel_test_from_correlations(correlations, tail=tail)
+
+    tail = tail.lower()
+    if tail == "upper":
+        z0 = stats.norm.ppf(1e-5)
+        z1 = stats.norm.ppf(1 - significance_level)
+    elif tail == "lower":
+        z0 = stats.norm.ppf(significance_level / 2)
+        z1 = stats.norm.ppf(1-1e-5)
+    elif tail == "two-tail":
+        z0 = stats.norm.ppf(significance_level / 2)
+        z1 = stats.norm.ppf(1 - significance_level / 2)
+
+    left  = z0 * s + m
+    right = z1 * s + m
+    x = np.linspace(left, right, 100)
+    y = stats.norm.pdf(x, m, s)
+
+    lower = -5 * s + m
+    upper = 5 * s + m
+    x_all = np.linspace(lower, upper, 100)
+    y_all = stats.norm.pdf(x_all, m, s)
+
+    plot.fill_between(x_all, y_all, 0, color=gaussian_background_color, alpha=gaussian_background_alpha)
+    plot.fill_between(x, y, 0, color=gaussian_color, alpha=gaussian_alpha)
+    plot.plot(x_all, y_all, color=gaussian_curve_color, alpha=gaussian_curve_alpha)
+    plot.vlines(x=[left, right], ymin=0, ymax=[stats.norm.pdf(left, m, s), stats.norm.pdf(right, m, s)], linestyle='-', color=gaussian_curve_color, alpha=gaussian_curve_alpha)
+
+    plot.hist(correlations, bins=20, range=(lower, upper), density=True, color=hist_fill_color, edgecolor=hist_edge_color, alpha=hist_alpha)
+
+    plot.set_xlim(left=lower, right=upper)
+
+    threshold_color = acceptance_color if r <= right else rejection_color
+    plot.axvline(x=r, linestyle=':', color=threshold_color)
+    plot.annotate('{:.2f}'.format(r), xy=(r, 0.9), color=threshold_color)
+
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
