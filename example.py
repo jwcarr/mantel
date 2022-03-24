@@ -22,21 +22,44 @@ dists2 = [[0.0,0.3,0.3,0.2],
 result = mantel.test(dists1, dists2, method="pearson", tail="upper")
 print(result)
 
+# Same example of using the object oriented programming
+
+t = mantel.Mantel(dists1, dists2, method="pearson", tail="upper")
+r = t.veridical_correlation
+p = t.p_value
+z = t.z_score
+print((r, p, z))
+
+if t.null_hypothesis:
+    print("The Mantel test result is to accept the null hypothesis")
+    print("=> The distance matrices aren't correlated.")
+else:
+    print("The Mantel test result is to reject the null hypothesis")
+    print("=> The distance matrices are correlated.")
+print("   [The probablilty to take the wrong decision is less than {}%.]".format(t.significance_level*100))
+
+
+
+# Graphical plot of correlations (requires matplotlib to be installed)
+
 try:
     import matplotlib.pyplot as plt
     import numpy as np
+    from mantel._utils import AVAILABLE_TAIL_METHODS
 
-    tails = ['lower', 'upper', 'two-tail']
-    fig, axs = plt.subplots(2, len(tails))
+    fig, axs = plt.subplots(2, len(AVAILABLE_TAIL_METHODS))
 
     plt.suptitle(r"Mantel tests for $\alpha$=5%")
     correlations = mantel.compute_correlations(dists1, dists2, method="pearson")
-    result = mantel.mantel_test_from_correlations(correlations)
-    print("{} => {}".format(result, (result[0] - result[2]) /result[3]))
-    for i, tail in enumerate(tails):
+    for i, tail in enumerate(AVAILABLE_TAIL_METHODS):
         axs[0, i].set_title("Small example with tail set to {}".format(tail))
-        mantel.plot(correlations, axs[0, i], tail=tail)
+        mantel.plot_correlations(correlations, axs[0, i], tail=tail)
 
+    # Example using the object oriented programming with random
+    # matrices. The Mantel test should lead to accept the null
+    # hypothesis most of the time
+
+    # Building the random matrices
     N = 50
     dists1 = np.random.rand(N, N)
     dists2 = np.random.rand(N, N)
@@ -45,14 +68,15 @@ try:
         for j in range(N):
             dists1[i][j] = dists1[j][i]
             dists2[i][j] = dists2[j][i]
-    correlations = mantel.compute_correlations(dists1, dists2, method="pearson")
-    for i, tail in enumerate(tails):
-        mantel.plot(correlations, axs[1, i], tail=tail)
-        mantel.plot(correlations, axs[1, i], tail=tail)
+
+    # Building a new instance of the Mantel test for the random matrices.
+    t = mantel.Mantel(dists1, dists2, method="pearson")
+    for i, tail in enumerate(AVAILABLE_TAIL_METHODS):
+        t.plot_correlations(axs[1, i])
         axs[1, i].set_title("Random distance matrices example with tail set to {}".format(tail))
 
     plt.tight_layout()
     plt.show()
 
 except ImportError:
-    print("In order to produce histograms, we recommand you installing the matplotlib package")
+    print("In order to produce histograms, you need to install the matplotlib library")
