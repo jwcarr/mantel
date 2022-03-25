@@ -111,7 +111,7 @@ def plot_correlations(correlations, plot,
 
     lower = -5 * s + m
     upper = 5 * s + m
-    x_all = np.linspace(-1, 1, 100)
+    x_all = np.linspace(lower, upper, 100)
     y_all = stats.norm.pdf(x_all, m, s)
 
     plot.fill_between(x_all, y_all, 0, color=gaussian_background_color, alpha=gaussian_background_alpha)
@@ -121,7 +121,7 @@ def plot_correlations(correlations, plot,
 
     plot.hist(correlations, bins=20, range=(lower, upper), density=True, histtype='stepfilled', color=hist_fill_color, edgecolor=hist_edge_color, alpha=hist_alpha)
 
-    plot.set_xlim(left=-1, right=1)
+    plot.set_xlim(left=lower, right=upper)
     plot.set_xlabel("correlation coefficients")
 
     plot.set_ylabel("Density")
