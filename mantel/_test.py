@@ -3,6 +3,82 @@ import numpy as np
 from scipy import spatial, stats
 
 
+class MantelResult(object):
+    """
+    Object representing the result of a Mantel test. Specific properties can
+    be queried by dot notation (e.g. `result.correlations`, `result.r`,
+    `result.p`, etc.) or the result object can be treated like a tuple of the
+    form `(r, p, z)` for backwards compatibility.
+    """
+
+    def __init__(self, correlations, tail):
+        self._correlations = correlations
+        self._tail = tail
+        self._perms = len(correlations)
+
+    def __repr__(self):
+        return f"MantelResult({self.r}, {self.p}, {self.z})"
+
+    def __iter__(self):
+        yield self.r
+        yield self.p
+        yield self.z
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.r
+        if index == 1:
+            return self.p
+        if index == 2:
+            return self.z
+        raise IndexError("index out of range")
+
+    @property
+    def perms(self):
+        return self._perms
+
+    @property
+    def tail(self):
+        return self._tail
+
+    @tail.setter
+    def tail(self, tail):
+        if tail not in ["upper", "lower", "two-tail"]:
+            raise ValueError(
+                'The tail should be set to "upper", "lower", or "two-tail"'
+            )
+        self._tail = tail
+
+    @property
+    def correlations(self):
+        return self._correlations
+
+    @property
+    def mean(self):
+        return np.mean(self._correlations)
+
+    @property
+    def std(self):
+        return np.std(self._correlations)
+
+    @property
+    def r(self):
+        return self._correlations[0]
+
+    @property
+    def p(self):
+        if self.tail == "upper":
+            return sum(self._correlations >= self.r) / self._perms
+        elif self.tail == "lower":
+            return sum(self._correlations <= self.r) / self._perms
+        else:
+            return sum(abs(self._correlations) >= abs(self.r)) / self._perms
+
+    @property
+    def z(self):
+        return (self.r - self.mean) / self.std
+
+
 def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False):
     """
     Takes two distance matrices (either redundant matrices or condensed vectors)
@@ -12,33 +88,35 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     Parameters
     ----------
     X : array_like
-            First distance matrix (condensed or redundant).
+        First distance matrix (condensed or redundant).
     Y : array_like
-            Second distance matrix (condensed or redundant), where the order of
-            elements corresponds to the order of elements in the first matrix.
+        Second distance matrix (condensed or redundant), where the order of
+        elements corresponds to the order of elements in the first matrix.
     perms : int, optional
-            The number of permutations to perform (default: 10000). A larger
-            number gives more reliable results but takes longer to run. If the
-            number of possible permutations is smaller, all permutations will
-            be tested. This can be forced by setting perms to 0.
+        The number of permutations to perform (default: 10000). A larger
+        number gives more reliable results but takes longer to run. If the
+        number of possible permutations is smaller, all permutations will
+        be tested. This can be forced by setting perms to 0.
     method : str, optional
-            Type of correlation coefficient to use; either 'pearson' or 'spearman'
-            (default: 'pearson').
+        Type of correlation coefficient to use; either 'pearson' or 'spearman'
+        (default: 'pearson').
     tail : str, optional
-            Which tail to test in the calculation of the empirical p-value; either
-            'upper', 'lower', or 'two-tail' (default: 'two-tail').
+        Which tail to test in the calculation of the empirical p-value; either
+        'upper', 'lower', or 'two-tail' (default: 'two-tail').
     ignore_nans : bool, optional
-            Ignore NaN values in the Y matrix (default: False). This can be
-            useful if you have missing values in one of the matrices.
+        Ignore NaN values in the Y matrix (default: False). This can be
+        useful if you have missing values in one of the matrices.
 
     Returns
     -------
-    r : float
-            Veridical correlation
-    p : float
-            Empirical p-value
-    z : float
-            Standard score (z-score)
+    MantelResult object from which various properties can be queried:
+
+    - MantelResult.r - veridical correlation coefficient
+    - MantelResult.p - empirical p-value
+    - MantelResult.z - standard score
+    - MantelResult.correlations - the sample correlations
+    - MantelResult.mean - mean of the sample correlations
+    - MantelResult.std - standard deviation of the sample correlations
     """
 
     # Ensure that X and Y are represented as Numpy arrays.
@@ -146,18 +224,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
         )  # compute veridical correlation and place in positon 0
 
-    r = correlations[0]
-
-    if tail == "upper":
-        p = sum(correlations >= r) / len(correlations)
-    elif tail == "lower":
-        p = sum(correlations <= r) / len(correlations)
-    elif tail == "two-tail":
-        p = sum(abs(correlations) >= abs(r)) / len(correlations)
-
-    z = (r - np.mean(correlations)) / np.std(correlations)
-
-    return r, p, z
+    return MantelResult(correlations, tail)
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
