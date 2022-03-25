@@ -161,7 +161,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
-    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    Y_residuals_permuted = np.zeros((m**2 - m) // 2)
     covariances = np.zeros(n)
     for i, order in enumerate(permutations(range(m))):
         Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
@@ -169,12 +169,12 @@ def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
             Y_residuals_as_matrix_permuted, Y_residuals_permuted
         )
         covariances[i] = (X_residuals * Y_residuals_permuted).sum()
-    denominator = np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals_permuted ** 2))
+    denominator = np.sqrt(sum(X_residuals**2) * sum(Y_residuals_permuted**2))
     return covariances / denominator
 
 
 def deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix):
-    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    Y_residuals_permuted = np.zeros((m**2 - m) // 2)
     correlations = np.zeros(n)
     for i, order in enumerate(permutations(range(m))):
         Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
@@ -191,14 +191,14 @@ def deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix):
         covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
         # The denominator will be different on each permutation
         denominator = np.sqrt(
-            sum(reduced_X_residuals ** 2) * sum(reduced_Y_residuals ** 2)
+            sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2)
         )
         correlations[i] = covariance / denominator
     return correlations
 
 
 def stochastic_test(m, n, X_residuals, Y_residuals_as_matrix):
-    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    Y_residuals_permuted = np.zeros((m**2 - m) // 2)
     covariances = np.zeros(n)
     order = np.arange(m)
     for i in range(1, n):
@@ -208,12 +208,12 @@ def stochastic_test(m, n, X_residuals, Y_residuals_as_matrix):
             Y_residuals_as_matrix_permuted, Y_residuals_permuted
         )
         covariances[i] = (X_residuals * Y_residuals_permuted).sum()
-    denominator = np.sqrt(sum(X_residuals ** 2) * sum(Y_residuals_permuted ** 2))
+    denominator = np.sqrt(sum(X_residuals**2) * sum(Y_residuals_permuted**2))
     return covariances / denominator
 
 
 def stochastic_test_with_nans(m, n, X, Y_residuals_as_matrix):
-    Y_residuals_permuted = np.zeros((m ** 2 - m) // 2)
+    Y_residuals_permuted = np.zeros((m**2 - m) // 2)
     correlations = np.zeros(n)
     order = np.arange(m)
     for i in range(1, n):
@@ -232,7 +232,7 @@ def stochastic_test_with_nans(m, n, X, Y_residuals_as_matrix):
         covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
         # The denominator will be different on each permutation
         denominator = np.sqrt(
-            sum(reduced_X_residuals ** 2) * sum(reduced_Y_residuals ** 2)
+            sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2)
         )
         correlations[i] = covariance / denominator
     return correlations
