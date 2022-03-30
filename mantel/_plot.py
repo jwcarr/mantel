@@ -3,10 +3,8 @@ from scipy import stats
 
 try:
     import matplotlib.pyplot as plt
-
-    _has_matplotlib = True
 except ImportError:
-    _has_matplotlib = False
+    plt = None
 
 
 def plot(
@@ -92,10 +90,8 @@ def plot(
     max_correlation : float
             Maximal correlation value to accept the null hypothesis.
     """
-    if not _has_matplotlib:
-        raise Exception(
-            "In order to produce histograms, you need to install the 'matplotlib' library first."
-        )
+    if plt is None:
+        raise ImportError("Matplotlib is required for plotting")
 
     (min_correlation, max_correlation) = confidence_interval(
         mean=result.mean,
