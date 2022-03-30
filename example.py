@@ -49,8 +49,5 @@ print(result.std)
 
 # Plotting example (requires matplotlib)
 
-import matplotlib.pyplot as plt
-
-fig, axis = plt.subplots()
-mantel.plot(result, axis)
+fig, axis = mantel.plot(result)
 fig.savefig('example.png')

@@ -3,13 +3,14 @@ from scipy import stats
 
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.axes import Axes
 except ImportError:
     plt = None
 
 
 def plot(
     result,
-    axis,
+    axis=None,
     significance_level=0.05,
     gaussian_background_color="blue",
     gaussian_background_alpha=0.1,
@@ -80,6 +81,12 @@ def plot(
     """
     if plt is None:
         raise ImportError("Matplotlib is required for plotting")
+    if axis is None:
+        fig, axis = plt.subplots()
+    elif isinstance(axis, Axes):
+        fig = axis.get_figure()
+    else:
+        raise ValueError('axis should be a Matplotlib Axis object')
 
     min_corr, max_corr = confidence_interval(result, significance_level)
 
@@ -131,6 +138,8 @@ def plot(
     )
     axis.axvline(x=result.r, linestyle=":", color=threshold_color)
     axis.annotate("{:.2f}".format(result.r), xy=(result.r, 0.9), color=threshold_color)
+
+    return fig, axis
 
 
 def confidence_interval(result, significance_level=0.05):
