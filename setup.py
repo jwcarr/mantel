@@ -26,7 +26,7 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=["numpy>=1.10", "scipy>=1.0"],
     setup_requires=["setuptools_scm"],
 )
