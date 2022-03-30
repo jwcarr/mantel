@@ -41,14 +41,6 @@ class MantelResult(object):
     def tail(self):
         return self._tail
 
-    @tail.setter
-    def tail(self, tail):
-        if tail not in ["upper", "lower", "two-tail"]:
-            raise ValueError(
-                'The tail should be set to "upper", "lower", or "two-tail"'
-            )
-        self._tail = tail
-
     @property
     def correlations(self):
         return self._correlations
