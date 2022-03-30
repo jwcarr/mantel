@@ -11,7 +11,7 @@ except ImportError:
 
 def plot(
     correlations,
-    plot,
+    axis,
     tail="two-tail",
     significance_level=0.05,
     gaussian_background_color="blue",
@@ -36,7 +36,7 @@ def plot(
     ----------
     correlations : array of floats
             The correlations computed by the Mantel test.
-    plot : matplotlib.axes.Axes
+    axis : matplotlib.axes.Axes
             The matplotlib figure to draw on.
     tail : str, optional
             Which tail to test in the calculation of the empirical p-value; either
@@ -114,16 +114,16 @@ def plot(
     x_all = np.linspace(lower, upper, 100)
     y_all = stats.norm.pdf(x_all, m, s)
 
-    plot.fill_between(
+    axis.fill_between(
         x_all,
         y_all,
         0,
         color=gaussian_background_color,
         alpha=gaussian_background_alpha,
     )
-    plot.fill_between(x, y, 0, color=gaussian_color, alpha=gaussian_alpha)
-    plot.plot(x_all, y_all, color=gaussian_curve_color, alpha=gaussian_curve_alpha)
-    plot.vlines(
+    axis.fill_between(x, y, 0, color=gaussian_color, alpha=gaussian_alpha)
+    axis.plot(x_all, y_all, color=gaussian_curve_color, alpha=gaussian_curve_alpha)
+    axis.vlines(
         x=[min_correlation, max_correlation],
         ymin=0,
         ymax=[
@@ -135,7 +135,7 @@ def plot(
         alpha=gaussian_curve_alpha,
     )
 
-    plot.hist(
+    axis.hist(
         correlations,
         bins=20,
         range=(lower, upper),
@@ -146,16 +146,16 @@ def plot(
         alpha=hist_alpha,
     )
 
-    plot.set_xlim(left=lower, right=upper)
-    plot.set_xlabel("correlation coefficients")
+    axis.set_xlim(left=lower, right=upper)
+    axis.set_xlabel("correlation coefficients")
 
-    plot.set_ylabel("Density")
+    axis.set_ylabel("Density")
 
     threshold_color = (
         acceptance_color if min_correlation <= r <= max_correlation else rejection_color
     )
-    plot.axvline(x=r, linestyle=":", color=threshold_color)
-    plot.annotate("{:.2f}".format(r), xy=(r, 0.9), color=threshold_color)
+    axis.axvline(x=r, linestyle=":", color=threshold_color)
+    axis.annotate("{:.2f}".format(r), xy=(r, 0.9), color=threshold_color)
     return (min_correlation, max_correlation)
 
 
