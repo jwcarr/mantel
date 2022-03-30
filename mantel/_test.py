@@ -11,10 +11,12 @@ class MantelResult(object):
     form `(r, p, z)` for backwards compatibility.
     """
 
-    def __init__(self, correlations, tail):
+    def __init__(self, correlations, method, tail, ignore_nans):
         self._correlations = correlations
-        self._tail = tail
         self._perms = len(correlations)
+        self._method = method
+        self._tail = tail
+        self._ignore_nans = ignore_nans
 
     def __repr__(self):
         return f"MantelResult({self.r}, {self.p}, {self.z})"
@@ -38,8 +40,16 @@ class MantelResult(object):
         return self._perms
 
     @property
+    def method(self):
+        return self._method
+
+    @property
     def tail(self):
         return self._tail
+
+    @property
+    def ignore_nans(self):
+        return self._ignore_nans
 
     @property
     def correlations(self):
@@ -216,7 +226,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
             sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
         )  # compute veridical correlation and place in positon 0
 
-    return MantelResult(correlations, tail)
+    return MantelResult(correlations, method, tail, ignore_nans)
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
