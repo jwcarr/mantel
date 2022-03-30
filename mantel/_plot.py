@@ -10,7 +10,7 @@ except ImportError:
 
 
 def plot(
-    correlations,
+    result,
     axis,
     tail="two-tail",
     significance_level=0.05,
@@ -34,8 +34,8 @@ def plot(
 
     Parameters
     ----------
-    correlations : array of floats
-            The correlations computed by the Mantel test.
+    results : MantelResult
+            The reuslt object output from mantel.test()
     axis : matplotlib.axes.Axes
             The matplotlib figure to draw on.
     tail : str, optional
@@ -97,22 +97,20 @@ def plot(
             "In order to produce histograms, you need to install the 'matplotlib' library first."
         )
 
-    r = correlations[0]
-    m = np.mean(correlations)
-    s = np.std(correlations)
-    p = probability_from_sample(value=r, sample=correlations, tail=tail)
-
     (min_correlation, max_correlation) = confidence_interval(
-        mean=m, std=s, significance_level=significance_level, tail=tail
+        mean=result.mean,
+        std=result.std,
+        significance_level=significance_level,
+        tail=tail,
     )
 
     x = np.linspace(min_correlation, max_correlation, 100)
-    y = stats.norm.pdf(x, m, s)
+    y = stats.norm.pdf(x, result.mean, result.std)
 
-    lower = -5 * s + m
-    upper = 5 * s + m
+    lower = -5 * result.std + result.mean
+    upper = 5 * result.std + result.mean
     x_all = np.linspace(lower, upper, 100)
-    y_all = stats.norm.pdf(x_all, m, s)
+    y_all = stats.norm.pdf(x_all, result.mean, result.std)
 
     axis.fill_between(
         x_all,
@@ -127,8 +125,8 @@ def plot(
         x=[min_correlation, max_correlation],
         ymin=0,
         ymax=[
-            stats.norm.pdf(min_correlation, m, s),
-            stats.norm.pdf(max_correlation, m, s),
+            stats.norm.pdf(min_correlation, result.mean, result.std),
+            stats.norm.pdf(max_correlation, result.mean, result.std),
         ],
         linestyle="-",
         color=gaussian_curve_color,
@@ -152,44 +150,13 @@ def plot(
     axis.set_ylabel("Density")
 
     threshold_color = (
-        acceptance_color if min_correlation <= r <= max_correlation else rejection_color
+        acceptance_color
+        if min_correlation <= result.r <= max_correlation
+        else rejection_color
     )
-    axis.axvline(x=r, linestyle=":", color=threshold_color)
-    axis.annotate("{:.2f}".format(r), xy=(r, 0.9), color=threshold_color)
+    axis.axvline(x=result.r, linestyle=":", color=threshold_color)
+    axis.annotate("{:.2f}".format(result.r), xy=(result.r, 0.9), color=threshold_color)
     return (min_correlation, max_correlation)
-
-
-def probability_from_sample(value, sample, tail):
-    """
-    Return the empirical p-value of the given value according to the
-    given sample and the given tail method.
-    Parameters
-    ----------
-    value : float
-            The value for which the empirical probability is computed
-    sample : array of floats
-            The observed values.
-    tail : str, optional
-            Which tail to test in the calculation of the empirical p-value; either
-            'upper', 'lower', or 'two-tail'.
-    Returns
-    -------
-    p : float
-            Empirical p-value
-    """
-
-    # Check for valid tail parameter.
-    tail = tail.lower()
-    check_tail_method(tail)
-
-    if tail == "upper":
-        p = sum(sample >= value) / len(sample)
-    elif tail == "lower":
-        p = sum(sample <= value) / len(sample)
-    elif tail == "two-tail":
-        p = sum(abs(sample) >= abs(value)) / len(sample)
-
-    return p
 
 
 def confidence_interval(
