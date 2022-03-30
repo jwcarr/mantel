@@ -1,6 +1,5 @@
-from ._test import compute_correlations, test
-from ._plot import plot_correlations
-from ._mantel import Mantel
+from ._test import test
+from ._plot import plot
 
 try:
     from ._version import __version__

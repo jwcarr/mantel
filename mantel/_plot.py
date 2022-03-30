@@ -10,7 +10,7 @@ except ImportError:
     _has_matplotlib = False
 
 
-def plot_correlations(correlations, plot,
+def plot(correlations, plot,
                       tail = "two-tail",
                       significance_level = 0.05,
                       gaussian_background_color = 'blue',
