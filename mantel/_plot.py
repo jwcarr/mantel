@@ -10,7 +10,6 @@ except ImportError:
 def plot(
     result,
     axis,
-    tail="two-tail",
     significance_level=0.05,
     gaussian_background_color="blue",
     gaussian_background_alpha=0.1,
@@ -36,9 +35,6 @@ def plot(
             The reuslt object output from mantel.test()
     axis : matplotlib.axes.Axes
             The matplotlib figure to draw on.
-    tail : str, optional
-            Which tail to test in the calculation of the empirical p-value; either
-            'upper', 'lower', or 'two-tail' (default: 'two-tail').
     significance_level : float
             Significance level of the null hypothesis of the Mantel
             test (default: 5%)
@@ -97,7 +93,7 @@ def plot(
         mean=result.mean,
         std=result.std,
         significance_level=significance_level,
-        tail=tail,
+        tail=result.tail,
     )
 
     x = np.linspace(min_correlation, max_correlation, 100)
@@ -130,7 +126,7 @@ def plot(
     )
 
     axis.hist(
-        correlations,
+        result.correlations,
         bins=20,
         range=(lower, upper),
         density=True,
@@ -193,7 +189,6 @@ def confidence_interval(
         raise ValueError("The significance level must be in the range ]0, 1[")
     # Check for valid tail parameter.
     tail = tail.lower()
-    check_tail_method(tail)
 
     if tail == "upper":
         lower_bound = stats.norm.ppf(1e-10, mean, std)
