@@ -17,6 +17,9 @@ class MantelResult(object):
         self._method = method
         self._tail = tail
         self._ignore_nans = ignore_nans
+        self._mean = None
+        self._std = None
+        self._p = None
 
     def __repr__(self):
         return f"MantelResult({self.r}, {self.p}, {self.z})"
@@ -57,24 +60,30 @@ class MantelResult(object):
 
     @property
     def mean(self):
-        return np.mean(self._correlations)
+        if self._mean is None:
+            self._mean = np.mean(self.correlations)
+        return self._mean
 
     @property
     def std(self):
-        return np.std(self._correlations)
+        if self._std is None:
+            self._std = np.std(self.correlations)
+        return self._std
 
     @property
     def r(self):
-        return self._correlations[0]
+        return self.correlations[0]
 
     @property
     def p(self):
-        if self.tail == "upper":
-            return sum(self._correlations >= self.r) / self._perms
-        elif self.tail == "lower":
-            return sum(self._correlations <= self.r) / self._perms
-        else:
-            return sum(abs(self._correlations) >= abs(self.r)) / self._perms
+        if self._p is None:
+            if self.tail == "upper":
+                self._p = sum(self.correlations >= self.r) / self.perms
+            elif self.tail == "lower":
+                self._p = sum(self.correlations <= self.r) / self.perms
+            else:
+                self._p = sum(abs(self.correlations) >= abs(self.r)) / self.perms
+        return self._p
 
     @property
     def z(self):
