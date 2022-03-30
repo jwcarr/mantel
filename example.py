@@ -45,3 +45,12 @@ print(result.p < 0.05)
 print(result.correlations)
 print(result.mean)
 print(result.std)
+
+
+# Plotting example (requires matplotlib)
+
+import matplotlib.pyplot as plt
+
+fig, axis = plt.subplots()
+mantel.plot(result, axis)
+fig.savefig('example.png')

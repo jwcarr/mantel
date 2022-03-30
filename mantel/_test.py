@@ -3,7 +3,7 @@ import numpy as np
 from scipy import spatial, stats
 
 
-class MantelResult(object):
+class MantelResult:
     """
     Object representing the result of a Mantel test. Specific properties can
     be queried by dot notation (e.g. `result.correlations`, `result.r`,

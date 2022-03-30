@@ -18,8 +18,6 @@ def plot(
     gaussian_curve_color="blue",
     gaussian_curve_alpha=0.3,
     hist_fill_color="orange",
-    hist_edge_color="green",
-    hist_alpha=0.7,
     acceptance_color="green",
     rejection_color="red",
 ):
@@ -79,24 +77,13 @@ def plot(
             the veridical correlation if the null hypothesis is
             rejected according to the significance level value
             (default: 'red').
-    Returns
-    -------
-    min_correlation : float
-            Minimal correlation value to accept the null hypothesis.
-    max_correlation : float
-            Maximal correlation value to accept the null hypothesis.
     """
     if plt is None:
         raise ImportError("Matplotlib is required for plotting")
 
-    (min_correlation, max_correlation) = confidence_interval(
-        mean=result.mean,
-        std=result.std,
-        significance_level=significance_level,
-        tail=result.tail,
-    )
+    min_corr, max_corr = confidence_interval(result, significance_level)
 
-    x = np.linspace(min_correlation, max_correlation, 100)
+    x = np.linspace(min_corr, max_corr, 100)
     y = stats.norm.pdf(x, result.mean, result.std)
 
     lower = -5 * result.std + result.mean
@@ -114,17 +101,16 @@ def plot(
     axis.fill_between(x, y, 0, color=gaussian_color, alpha=gaussian_alpha)
     axis.plot(x_all, y_all, color=gaussian_curve_color, alpha=gaussian_curve_alpha)
     axis.vlines(
-        x=[min_correlation, max_correlation],
+        x=[min_corr, max_corr],
         ymin=0,
         ymax=[
-            stats.norm.pdf(min_correlation, result.mean, result.std),
-            stats.norm.pdf(max_correlation, result.mean, result.std),
+            stats.norm.pdf(min_corr, result.mean, result.std),
+            stats.norm.pdf(max_corr, result.mean, result.std),
         ],
         linestyle="-",
         color=gaussian_curve_color,
         alpha=gaussian_curve_alpha,
     )
-
     axis.hist(
         result.correlations,
         bins=20,
@@ -132,31 +118,22 @@ def plot(
         density=True,
         histtype="stepfilled",
         color=hist_fill_color,
-        edgecolor=hist_edge_color,
-        alpha=hist_alpha,
     )
 
     axis.set_xlim(left=lower, right=upper)
-    axis.set_xlabel("correlation coefficients")
-
-    axis.set_ylabel("Density")
+    axis.set_xlabel("Correlation coefficient")
+    axis.set_yticks([])
 
     threshold_color = (
         acceptance_color
-        if min_correlation <= result.r <= max_correlation
+        if min_corr <= result.r <= max_corr
         else rejection_color
     )
     axis.axvline(x=result.r, linestyle=":", color=threshold_color)
     axis.annotate("{:.2f}".format(result.r), xy=(result.r, 0.9), color=threshold_color)
-    return (min_correlation, max_correlation)
 
 
-def confidence_interval(
-    mean=0,
-    std=1,
-    significance_level=0.05,
-    tail="two-tail",
-):
+def confidence_interval(result, significance_level=0.05):
     """
     Return the confidence interval in a normal distribution
     (characterized by its given mean and its given standard deviation)
@@ -183,20 +160,15 @@ def confidence_interval(
     upper_bound : float
             Upper bound of the confidence interval.
     """
-
-    # Check for valid significance level
     if not (0 < significance_level < 1):
         raise ValueError("The significance level must be in the range ]0, 1[")
-    # Check for valid tail parameter.
-    tail = tail.lower()
-
-    if tail == "upper":
-        lower_bound = stats.norm.ppf(1e-10, mean, std)
-        upper_bound = stats.norm.ppf(1 - significance_level, mean, std)
-    elif tail == "lower":
-        lower_bound = stats.norm.ppf(significance_level, mean, std)
-        upper_bound = stats.norm.ppf(1 - 1e-10, mean, std)
-    elif tail == "two-tail":
-        lower_bound = stats.norm.ppf(significance_level / 2, mean, std)
-        upper_bound = stats.norm.ppf(1 - significance_level / 2, mean, std)
+    if result.tail == "upper":
+        lower_bound = stats.norm.ppf(1e-10, result.mean, result.std)
+        upper_bound = stats.norm.ppf(1 - significance_level, result.mean, result.std)
+    elif result.tail == "lower":
+        lower_bound = stats.norm.ppf(significance_level, result.mean, result.std)
+        upper_bound = stats.norm.ppf(1 - 1e-10, result.mean, result.std)
+    elif result.tail == "two-tail":
+        lower_bound = stats.norm.ppf(significance_level / 2, result.mean, result.std)
+        upper_bound = stats.norm.ppf(1 - significance_level / 2, result.mean, result.std)
     return (lower_bound, upper_bound)
