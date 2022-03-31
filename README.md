@@ -10,22 +10,29 @@ Installation
 The `mantel` package is available on PyPI and can be installed using `pip`:
 
 ```shell
-pip install mantel
+$ pip install mantel
 ```
+
+Once installed, the package can be imported in the normal way:
+
+```python
+import mantel
+```
+
 
 Usage
 -----
 
-`mantel` provides one function, `test()`, which takes the following arguments:
+The `mantel` package contains one main function, `test()`, which takes the following arguments:
 
 - `X` *array_like*: First distance matrix (condensed or redundant).
-- `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in X.
-- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more reliable results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested. This can be forced by setting `perms` to `0`.
+- `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in *X*.
+- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more consistent results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested (this can be forced by setting `perms` to `0`).
 - `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
 - `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either `upper`, `lower`, or `two-tail` (default: `two-tail`).
-- `ignore_nans` *bool*, optional: Ignore `np.nan` values in the Y matrix (default: `False`). This can be useful if you have missing values in one of the matrices.
+- `ignore_nans` *bool*, optional: Ignore `np.nan` values in the *Y* matrix (default: `False`). This can be useful if you have missing values in one of the matrices.
 
-The `mantel.test()` function returns a `MantelResult` object, which has various properites that can be queried:
+The function returns a `MantelResult` object, which has various properties that can be queried:
 
 - `MantelResult.r` *float*: Veridical correlation
 - `MantelResult.p` *float*: Empirical p-value
@@ -35,12 +42,12 @@ The `mantel.test()` function returns a `MantelResult` object, which has various 
 - `MantelResult.std` *float*: Standard deviation of sample correlations
 
 
-Example
--------
+Worked Example
+--------------
 
-Let’s say we have a set of four objects and we want to correlate X (the distances between the four objects using one measure) with Y (the corresponding distances between the four objects using another measure). For example, your “objects” might be species of animal, and your two measures might be genetic distance and geographical distance (the hypothesis being that species that live far away from each other will tend to be more genetically different).
+Let’s say we have a set of four objects and we want to correlate *X* (the distances between the four objects using one measure) with *Y* (the corresponding distances between the four objects using another measure). For example, your “objects” might be species of animal, and your two measures might be genetic distance and geographical distance (the hypothesis being that species that live far away from each other will tend to be more genetically different).
 
-For four objects, there are six pairwise distances. First you should compute the pairwise distances for each measure and store the distances in two lists or arrays (i.e. condensed distance vectors). Alternatively, you can compute the full redundant distance matrices; this program will accept either format. No distance functions are included in this module, since the metrics you use will be specific to your particular data.
+For four objects, there are six pairwise distances. First you should compute the pairwise distances for each measure and store the distances in two condensed or redundant distance matrices (the `test()` function will accept either format). No distance functions are included in this package, since the metrics you use will be specific to your particular data.
 
 Let’s say our data looks like this:
 
@@ -54,27 +61,53 @@ dists2 = [0.3, 0.3, 0.2, 0.7, 0.8, 0.3] # E.g. geographical distances
 We pass the data to the `test()` function and optionally specify the number of permutations to test against, a correlation method to use (either ‘pearson’ or ‘spearman’), and which tail to test (either ‘upper’, ‘lower’, or ‘two-tail’). In this case, we’ll use the Pearson correlation and test the upper tail, since we’re expecting to find a positive correlation.
 
 ```python
-import mantel
 result = mantel.test(dists1, dists2, perms=10000, method='pearson', tail='upper')
 ```
 
-This will measure the veridical Pearson correlation between the two sets of pairwise distances. It then repeatedly measures the correlation again and again under permutations of one of the distance matrices to produce a distribution of correlations under the null hypothesis. Printing the result shows the veridical correlation, empirical p-value, and z-score:
+This will measure the veridical Pearson correlation between the two sets of pairwise distances. It then repeatedly measures the correlation again and again under permutations of one of the distance matrices to produce a distribution of correlations under the null hypothesis. In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations (as is the case here), then the `test()` function simply tests against all possible permutations of the matrix, yielding a deterministic result.
+
+Printing the result shows the veridical correlation, empirical p-value, and z-score:
 
 ```python
 print(result)
 # MantelResult(0.9148936170212766, 0.041666666666666664, 2.040402492261023)
 ```
 
-To check if correlation is significant, we could do:
+Individual results can be accessed through the relevant object property. For example, to check if the veridical correlation is significant, we could do:
 
 ```python
 print(result.p < 0.05)
 # True
 ```
 
-Since the p-value is less than 0.05, we can conclude that there is a significant correlation between these two sets of distances. This suggests that the species that live closer together tend to be more genetically related, while those that live further apart tend to be less genetically related.
+Since the p-value is less than 0.05, we can conclude that there is a significant correlation between the two sets of distances. This suggests that the species that live closer together tend to be more genetically related, while those that live further apart tend to be less genetically related.
 
-In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations (as is the case here), then the program ignores your request and tests the veridical against all possible permutations of the matrix. This gives a deterministic result and can be forced by setting the `perms` argument to `0`. Otherwise the program randomly samples the space of possible permutations the requested number of times. This is useful because, in the case of large matrices, it may be intractable to compute all possible permutations. For example, for 13 objects, it would take several days to compute a deterministic result, for 15 objects you’d be looking at multiple years, and 23 objects would take longer than the current age of the universe! However, for small matrices, a deterministic result should be preferred, since it is reproducible.
+
+Plotting
+--------
+
+The `mantel` package also provides a `plot()` function, which plots the distribution of sample correlations against the veridical. For example, here we generate two random distance matrices and plot the results:
+
+```python
+dists1 = np.random.random(351)
+dists2 = np.random.random(351)
+
+result = mantel.test(dists1, dists2)
+
+fig, axis = mantel.plot(result)
+fig.savefig('example.svg')
+```
+
+<img src='example.svg' width='100%'>
+
+
+The `plot()` function has several other arguments for customization:
+
+- `alpha` *float*: Significance level for rejecting the null hypothesis (default: 5%)
+- `hist_color`*str*: Color used for the histogram bars (default: 'lightgray').
+- `gaussian_color` *str*:  Color used for the normal distribution curve and the confidence interval limits (default: 'black').
+- `acceptance_color` *str*: Color used for drawing the vertical line and the label of the veridical correlation if the null hypothesis is rejected according to the significance level value (default: 'black').
+- `rejection_color` *str*: Color used for drawing the vertical line and the label of the veridical correlation if the null hypothesis cannot be rejected according to the significance level value (default: 'black').
 
 
 License
@@ -83,7 +116,7 @@ License
 This package is licensed under the terms of the MIT License.
 
 
-References and links
+References and Links
 --------------------
 
 Mantel, N. (1967). The detection of disease clustering and a generalized regression approach. *Cancer Research*, *27*(2), 209–220.

@@ -50,4 +50,4 @@ print(result.std)
 # Plotting example (requires matplotlib)
 
 fig, axis = mantel.plot(result)
-fig.savefig('example.png')
+fig.savefig('example.svg')

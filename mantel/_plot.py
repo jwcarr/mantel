@@ -33,19 +33,18 @@ def plot(
     alpha : float
         Significance level for rejecting the null hypothesis (default: 5%)
     hist_color: str
-        Color used for filling the correlations histogram bars
-        (default: 'orange').
+        Color used for the histogram bars (default: 'lightgray').
     gaussian_color: str
-        Color used for painting the normal distribution curve and the
-        confidence interval limits (default: 'blue').
+        Color used for the normal distribution curve and the confidence
+        interval limits (default: 'black').
     acceptance_color: str
         Color used for drawing the vertical line and the label of the
         veridical correlation if the null hypothesis is rejected according to
-        the significance level value(default: 'green').
+        the significance level value (default: 'black').
     rejection_color: str
         Color used for drawing the vertical line and the label of the
         veridical correlation if the null hypothesis cannot be rejected
-        according to the significance level value(default: 'red').
+        according to the significance level value (default: 'black').
 
     Returns
     -------
