@@ -1,3 +1,4 @@
+import math
 from itertools import permutations
 import numpy as np
 from scipy import spatial, stats
@@ -214,7 +215,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     )
 
     m = len(Y_residuals_as_matrix)  # number of objects
-    n = np.math.factorial(m)  # number of possible matrix permutations
+    n = math.factorial(m)  # number of possible matrix permutations
 
     # If the number of requested permutations is greater than the number of
     # possible permutations (m!) or the perms parameter is set to 0, then run a
