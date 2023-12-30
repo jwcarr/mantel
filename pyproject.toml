@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "mantel"
+authors = [
+  { name="Jon Carr", email="jon.carr@rhul.ac.uk" },
+]
+description = "Python implementation of the Mantel test, a significance test of the correlation between two distance matrices"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Mathematics",
+]
+requires-python = ">=3.6"
+dependencies = [
+  "numpy>=1.10",
+  "scipy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jwcarr/mantel"
+
+[tool.setuptools]
+packages = ["mantel"]
+
+[tool.setuptools_scm]
+version_file = "mantel/_version.py"
+version_file_template = '__version__ = "{version}"'
