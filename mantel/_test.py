@@ -62,13 +62,13 @@ class MantelResult:
     @property
     def mean(self):
         if self._mean is None:
-            self._mean = np.mean(self.correlations)
+            self._mean = np.mean(self.correlations[1:])
         return self._mean
 
     @property
     def std(self):
         if self._std is None:
-            self._std = np.std(self.correlations)
+            self._std = np.std(self.correlations[1:])
         return self._std
 
     @property
