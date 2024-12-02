@@ -12,12 +12,13 @@ class MantelResult:
     form `(r, p, z)` for backwards compatibility.
     """
 
-    def __init__(self, correlations, method, tail, ignore_nans):
+    def __init__(self, correlations, method, tail, ignore_nans, stochastic_test):
         self._correlations = correlations
         self._perms = len(correlations)
         self._method = method
         self._tail = tail
         self._ignore_nans = ignore_nans
+        self._stochastic_test = stochastic_test
         self._mean = None
         self._std = None
         self._p = None
@@ -56,7 +57,13 @@ class MantelResult:
         return self._ignore_nans
 
     @property
+    def stochastic_test(self):
+        return self._stochastic_test
+
+    @property
     def correlations(self):
+        if self.stochastic_test:
+            return self._correlations[1:]
         return self._correlations
 
     @property
@@ -73,17 +80,17 @@ class MantelResult:
 
     @property
     def r(self):
-        return self.correlations[0]
+        return self._correlations[0]
 
     @property
     def p(self):
         if self._p is None:
             if self.tail == "upper":
-                self._p = sum(self.correlations >= self.r) / self.perms
+                self._p = sum(self._correlations >= self.r) / self.perms
             elif self.tail == "lower":
-                self._p = sum(self.correlations <= self.r) / self.perms
+                self._p = sum(self._correlations <= self.r) / self.perms
             else:
-                self._p = sum(abs(self.correlations) >= abs(self.r)) / self.perms
+                self._p = sum(abs(self._correlations) >= abs(self.r)) / self.perms
         return self._p
 
     @property
@@ -226,6 +233,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         else:
             correlations = deterministic_test(m, n, X_residuals, Y_residuals_as_matrix)
         # correlations[0] is the veridical correlation
+        return MantelResult(correlations, method, tail, ignore_nans, stochastic_test=False)
 
     else:
         if ignore_nans:
@@ -235,8 +243,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         correlations[0] = sum(X_residuals[finite_Y] * Y_residuals[finite_Y]) / np.sqrt(
             sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
         )  # compute veridical correlation and place in positon 0
-
-    return MantelResult(correlations, method, tail, ignore_nans)
+        return MantelResult(correlations, method, tail, ignore_nans, stochastic_test=True)
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
@@ -278,9 +285,9 @@ def deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix):
 
 def stochastic_test(m, n, X_residuals, Y_residuals_as_matrix):
     Y_residuals_permuted = np.zeros((m**2 - m) // 2)
-    covariances = np.zeros(n)
+    covariances = np.zeros(n + 1)
     order = np.arange(m)
-    for i in range(1, n):
+    for i in range(1, n + 1):
         np.random.shuffle(order)
         Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
         spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
@@ -293,9 +300,9 @@ def stochastic_test(m, n, X_residuals, Y_residuals_as_matrix):
 
 def stochastic_test_with_nans(m, n, X, Y_residuals_as_matrix):
     Y_residuals_permuted = np.zeros((m**2 - m) // 2)
-    correlations = np.zeros(n)
+    correlations = np.zeros(n + 1)
     order = np.arange(m)
-    for i in range(1, n):
+    for i in range(1, n + 1):
         np.random.shuffle(order)
         Y_residuals_as_matrix_permuted = Y_residuals_as_matrix[order, :][:, order]
         spatial.distance._distance_wrap.to_vector_from_squareform_wrap(
