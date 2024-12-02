@@ -75,7 +75,7 @@ class MantelResult:
     @property
     def std(self):
         if self._std is None:
-            self._std = np.std(self.correlations)
+            self._std = np.std(self.correlations, ddof=int(self.stochastic_test))
         return self._std
 
     @property
