@@ -233,7 +233,9 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         else:
             correlations = deterministic_test(m, n, X_residuals, Y_residuals_as_matrix)
         # correlations[0] is the veridical correlation
-        return MantelResult(correlations, method, tail, ignore_nans, stochastic_test=False)
+        return MantelResult(
+            correlations, method, tail, ignore_nans, stochastic_test=False
+        )
 
     else:
         if ignore_nans:
@@ -243,7 +245,9 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
         correlations[0] = sum(X_residuals[finite_Y] * Y_residuals[finite_Y]) / np.sqrt(
             sum(X_residuals[finite_Y] ** 2) * sum(Y_residuals[finite_Y] ** 2)
         )  # compute veridical correlation and place in positon 0
-        return MantelResult(correlations, method, tail, ignore_nans, stochastic_test=True)
+        return MantelResult(
+            correlations, method, tail, ignore_nans, stochastic_test=True
+        )
 
 
 def deterministic_test(m, n, X_residuals, Y_residuals_as_matrix):
@@ -276,9 +280,7 @@ def deterministic_test_with_nans(m, n, X, Y_residuals_as_matrix):
         reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
         covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
         # The denominator will be different on each permutation
-        denominator = np.sqrt(
-            sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2)
-        )
+        denominator = np.sqrt(sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2))
         correlations[i] = covariance / denominator
     return correlations
 
@@ -317,8 +319,6 @@ def stochastic_test_with_nans(m, n, X, Y_residuals_as_matrix):
         reduced_Y_residuals = Y_residuals_permuted[finite_Y_permuted]
         covariance = (reduced_X_residuals * reduced_Y_residuals).sum()
         # The denominator will be different on each permutation
-        denominator = np.sqrt(
-            sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2)
-        )
+        denominator = np.sqrt(sum(reduced_X_residuals**2) * sum(reduced_Y_residuals**2))
         correlations[i] = covariance / denominator
     return correlations
