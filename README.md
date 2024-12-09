@@ -26,7 +26,8 @@ Usage
 The `mantel` package contains one main function, `test()` with the following call signature:
 
 ```python
-def test(X: array_like, Y: array_like, perms: int = 10000, method: str = "pearson", tail: str = "two-tail", ignore_nans: bool = False) -> MantelResult:
+def test(X: array_like, Y: array_like, perms: int = 10000, method: str = "pearson",
+		tail: str = "two-tail", ignore_nans: bool = False) -> MantelResult:
 
 ```
 
@@ -42,8 +43,8 @@ The function returns a `MantelResult` object with the following properties:
 - `MantelResult.r` *float*: Veridical correlation
 - `MantelResult.p` *float*: Empirical p-value
 - `MantelResult.z` *float*: Standard score (z-score)
-- 'MantelResult.stochastic_test' *bool*: `True` if the test was performed by randomly sampling possible permutations; `False` if the test was performed by enumerating all possible permutations.
-- `MantelResult.correlations` *array*: Correlations resulting from the permutations
+- `MantelResult.stochastic_test` *bool*: `True` if the test was performed by randomly sampling possible permutations; `False` if the test was performed by enumerating all possible permutations.
+- `MantelResult.correlations` *array*: Correlation coefficients produced by the test
 - `MantelResult.mean` *float*: Mean of `correlations`
 - `MantelResult.std` *float*: Sample standard deviation of `correlations` (if `stochastic_test==True`) or population standard deviation of `correlations` (if `stochastic_test==False`)
 
