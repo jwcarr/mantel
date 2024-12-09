@@ -23,23 +23,29 @@ import mantel
 Usage
 -----
 
-The `mantel` package contains one main function, `test()`, which takes the following arguments:
+The `mantel` package contains one main function, `test()` with the following call signature:
+
+```python
+def test(X: array_like, Y: array_like, perms: int = 10000, method: str = "pearson", tail: str = "two-tail", ignore_nans: bool = False) -> MantelResult:
+
+```
 
 - `X` *array_like*: First distance matrix (condensed or redundant).
 - `Y` *array_like*: Second distance matrix (condensed or redundant), where the order of elements corresponds to the order of elements in *X*.
-- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more consistent results but takes longer to run. If the number of possible permutations is smaller, all permutations will be tested (this can be forced by setting `perms` to `0`).
+- `perms` *int*, optional: The number of permutations to perform (default: `10000`). A larger number gives more consistent results but takes longer to run. If the number of possible permutations of the distance matrix is smaller than `perms`, all possible permutations will be enumerated leading to a deterministic result (this can be forced by setting `perms` to `0`).
 - `method` *str*, optional: Type of correlation coefficient to use; either `pearson` or `spearman` (default: `pearson`).
 - `tail` *str*, optional: Which tail to test in the calculation of the empirical p-value; either `upper`, `lower`, or `two-tail` (default: `two-tail`).
 - `ignore_nans` *bool*, optional: Ignore `np.nan` values in the *Y* matrix (default: `False`). This can be useful if you have missing values in one of the matrices.
 
-The function returns a `MantelResult` object, which has various properties that can be queried:
+The function returns a `MantelResult` object with the following properties:
 
 - `MantelResult.r` *float*: Veridical correlation
 - `MantelResult.p` *float*: Empirical p-value
 - `MantelResult.z` *float*: Standard score (z-score)
-- `MantelResult.correlations` *array*: Sample correlations
-- `MantelResult.mean` *float*: Mean of sample correlations
-- `MantelResult.std` *float*: Standard deviation of sample correlations
+- 'MantelResult.stochastic_test' *bool*: `True` if the test was performed by randomly sampling possible permutations; `False` if the test was performed by enumerating all possible permutations.
+- `MantelResult.correlations` *array*: Correlations resulting from the permutations
+- `MantelResult.mean` *float*: Mean of `correlations`
+- `MantelResult.std` *float*: Sample standard deviation of `correlations` (if `stochastic_test==True`) or population standard deviation of `correlations` (if `stochastic_test==False`)
 
 
 Worked Example
@@ -64,7 +70,7 @@ We pass the data to the `test()` function and optionally specify the number of p
 result = mantel.test(dists1, dists2, perms=10000, method='pearson', tail='upper')
 ```
 
-This will measure the veridical Pearson correlation between the two sets of pairwise distances. It then repeatedly measures the correlation again and again under permutations of one of the distance matrices to produce a distribution of correlations under the null hypothesis. In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. If the number of requested permutations is greater than the number of possible permutations (as is the case here), then the `test()` function simply tests against all possible permutations of the matrix, yielding a deterministic result.
+This will measure the veridical Pearson correlation between the two sets of pairwise distances. It then repeatedly measures the correlation again and again under permutations of one of the distance matrices to produce a distribution of correlations under the null hypothesis. In the example above, we requested 10,000 permutations (the default). However, for four objects there are only 4! = 24 possible permutations of the matrix. In such a scenario, where the number of requested permutations is greater than the number of possible permutations, `mantel.test()` simply tests against all possible permutations of the matrix, yielding a deterministic result.
 
 Printing the result shows the veridical correlation, empirical p-value, and z-score:
 
@@ -73,7 +79,7 @@ print(result)
 # MantelResult(0.9148936170212766, 0.041666666666666664, 2.040402492261023)
 ```
 
-Individual results can be accessed through the relevant object property. For example, to check if the veridical correlation is significant, we could do:
+Individual results can be accessed by the relevant property name. For example, to check if the veridical correlation is significant, we could do:
 
 ```python
 print(result.p < 0.05)
