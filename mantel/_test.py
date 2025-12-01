@@ -3,6 +3,7 @@ from itertools import permutations
 import numpy as np
 from scipy import spatial, stats
 
+np.random.seed(0) # make sure stochastic tests are reproducible?
 
 class MantelResult:
     """
