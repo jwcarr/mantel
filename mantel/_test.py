@@ -182,7 +182,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     # If Spearman correlation is requested, convert X and Y to ranks.
     method = method.lower()
     if method == "spearman":
-        X, Y = stats.rankdata(X), stats.rankdata(Y)
+        X, Y = stats.rankdata(X), stats.rankdata(Y,nan_policy='omit')
         Y[~finite_Y] = np.nan  # retain any nans, so that these can be ignored later
 
     # Check for valid method parameter.
@@ -213,8 +213,8 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
 
     # Calculate the X and Y residuals, which will be used to compute the
     # covariance under each permutation.
-    X_residuals = X - np.mean(X[finite_Y])
-    Y_residuals = Y - np.mean(Y[finite_Y])
+    X_residuals = X - np.nanmean(X[finite_Y])
+    Y_residuals = Y - np.nanmean(Y[finite_Y])
 
     # Expand the Y residuals to a redundant matrix.
     Y_residuals_as_matrix = spatial.distance.squareform(
