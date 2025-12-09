@@ -117,6 +117,12 @@ The `plot()` function has several other arguments for customization:
 - `rejection_color` *str*: Color used for drawing the vertical line and the label of the veridical correlation if the null hypothesis cannot be rejected according to the significance level value (default: 'black').
 
 
+Contributing
+------------
+
+This project is in the stable/maintenance phase and is not under active development. I am only aiming to fix bugs and keep it compatible with current versions of Python so that it remains useful to the community. With that in mind, contributions are very welcome, but please read the `CONTRIBUTING` file before submitting a pull request.
+
+
 License
 -------
 
