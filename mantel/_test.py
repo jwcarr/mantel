@@ -182,7 +182,7 @@ def test(X, Y, perms=10000, method="pearson", tail="two-tail", ignore_nans=False
     # If Spearman correlation is requested, convert X and Y to ranks.
     method = method.lower()
     if method == "spearman":
-        X, Y = stats.rankdata(X), stats.rankdata(Y,nan_policy='omit')
+        X, Y = stats.rankdata(X), stats.rankdata(Y, nan_policy="omit")
         Y[~finite_Y] = np.nan  # retain any nans, so that these can be ignored later
 
     # Check for valid method parameter.
